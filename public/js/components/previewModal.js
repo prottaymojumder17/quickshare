@@ -19,6 +19,7 @@
     init() {
       this.els = {
         modal: $('#previewModal'),
+        card: $('#previewModal .preview-modal-card'),
         icon: $('#previewModalIcon'),
         name: $('#previewModalName'),
         meta: $('#previewModalMeta'),
@@ -63,9 +64,11 @@
         if (e.target === modal) this.close();
       });
 
-      // Prev / Next
+      // Prev / Next (bottom nav)
       prevBtn?.addEventListener('click', () => this.prev());
       nextBtn?.addEventListener('click', () => this.next());
+
+      // Float nav arrows
       floatPrev?.addEventListener('click', () => this.prev());
       floatNext?.addEventListener('click', () => this.next());
 
@@ -73,26 +76,32 @@
       downloadBtn?.addEventListener('click', () => {
         const item = this.getCurrent();
         if (!item) return;
+
         if (item.kind === 'local' && item.src instanceof File) {
           // Local file — trigger download
           const url = URL.createObjectURL(item.src);
           const a = document.createElement('a');
           a.href = url;
           a.download = item.name;
+          document.body.appendChild(a);
           a.click();
+          a.remove();
           setTimeout(() => URL.revokeObjectURL(url), 1000);
         } else if (typeof item.src === 'string') {
           // Remote URL
           const a = document.createElement('a');
           a.href = item.src;
           a.download = item.name;
+          document.body.appendChild(a);
           a.click();
+          a.remove();
         }
       });
 
-      // Keyboard
+      // Keyboard navigation
       document.addEventListener('keydown', e => {
         if (!this.isOpen) return;
+
         if (e.key === 'Escape') {
           e.preventDefault();
           this.close();
@@ -105,10 +114,10 @@
         }
       });
 
-      // Listen for events
+      // Listen for preview request from file list (sender side)
       QS.utils.on('qs:file-preview', e => this.openFromFileList(e.detail.id));
 
-      // Body scroll lock
+      // Close on page visibility change (save resources)
       document.addEventListener('visibilitychange', () => {
         if (document.hidden && this.isOpen) this.close();
       });
@@ -189,7 +198,14 @@
 
       this.isOpen = true;
       this.els.modal.classList.add('show');
+      this.els.modal.setAttribute('aria-hidden', 'false');
       document.body.style.overflow = 'hidden';
+
+      // Show/hide floating nav based on item count
+      const hasMultiple = this.items.length > 1;
+      if (this.els.card) {
+        this.els.card.classList.toggle('has-multiple', hasMultiple);
+      }
 
       this.render();
     },
@@ -202,6 +218,7 @@
 
       this.isOpen = false;
       this.els.modal.classList.remove('show');
+      this.els.modal.setAttribute('aria-hidden', 'true');
       document.body.style.overflow = '';
 
       // Cleanup media elements (stop playback)
@@ -271,19 +288,23 @@
         floatNext
       } = this.els;
 
-      // Header
+      // ── Header ──
       if (icon) icon.textContent = fileIcon(item.mimetype, item.name);
       if (name) name.textContent = item.name;
+
       if (meta) {
         meta.innerHTML = '';
-        const sizeSpan = el('span', { text: formatSize(item.size) });
-        meta.appendChild(sizeSpan);
 
+        // Size
+        meta.appendChild(el('span', { text: formatSize(item.size) }));
+
+        // Category
         const cat = fileCategory(item.mimetype);
         if (cat && cat !== 'other') {
           meta.appendChild(el('span', { text: cat.toUpperCase() }));
         }
 
+        // File X of Y
         if (this.items.length > 1) {
           meta.appendChild(
             el('span', {
@@ -293,25 +314,43 @@
         }
       }
 
-      // Body — clear then render
+      // ── Body ──
       if (body) {
         body.innerHTML = '';
         body.appendChild(this.buildContent(item));
       }
 
-      // Navigation visibility
+      // ── Nav (bottom bar + float arrows) ──
       const hasMultiple = this.items.length > 1;
+
+      // Bottom nav bar
       if (nav) nav.classList.toggle('hidden', !hasMultiple);
 
+      // Card class (controls float nav visibility via CSS)
+      if (this.els.card) {
+        this.els.card.classList.toggle('has-multiple', hasMultiple);
+      }
+
       if (hasMultiple) {
-        if (counter)
+        // Counter
+        if (counter) {
           counter.textContent = `${this.currentIndex + 1} / ${this.items.length}`;
-        if (prevBtn) prevBtn.disabled = this.currentIndex === 0;
-        if (nextBtn)
-          nextBtn.disabled = this.currentIndex === this.items.length - 1;
-        if (floatPrev) floatPrev.disabled = this.currentIndex === 0;
-        if (floatNext)
-          floatNext.disabled = this.currentIndex === this.items.length - 1;
+        }
+
+        // Disabled states
+        const isFirst = this.currentIndex === 0;
+        const isLast = this.currentIndex === this.items.length - 1;
+
+        if (prevBtn) prevBtn.disabled = isFirst;
+        if (nextBtn) nextBtn.disabled = isLast;
+        if (floatPrev) floatPrev.disabled = isFirst;
+        if (floatNext) floatNext.disabled = isLast;
+      } else {
+        // Single file — reset disabled states
+        if (prevBtn) prevBtn.disabled = true;
+        if (nextBtn) nextBtn.disabled = true;
+        if (floatPrev) floatPrev.disabled = true;
+        if (floatNext) floatNext.disabled = true;
       }
     },
 
@@ -326,6 +365,7 @@
 
       // Get source URL
       let src = item.src;
+
       if (item.kind === 'local' && src instanceof File) {
         // Create object URL (cached)
         if (!item._objectUrl) {
@@ -335,13 +375,10 @@
       }
 
       if (!src) {
-        return this.noPreview(
-          'No preview available',
-          'src' in item ? 'Could not load' : ''
-        );
+        return this.noPreview('No preview available', 'Could not load file');
       }
 
-      // Image
+      // ── Image ──
       if (cat === 'image') {
         const img = el('img', { src, alt: item.name });
         img.onerror = () => {
@@ -352,7 +389,7 @@
         return wrap;
       }
 
-      // Video
+      // ── Video ──
       if (cat === 'video') {
         const video = el('video', {
           src,
@@ -369,7 +406,7 @@
         return wrap;
       }
 
-      // Audio
+      // ── Audio ──
       if (cat === 'audio') {
         const audioWrap = el('div', { class: 'audio-wrap' });
         audioWrap.appendChild(el('div', { class: 'audio-icon', text: '🎵' }));
@@ -389,13 +426,13 @@
         return audioWrap;
       }
 
-      // PDF
+      // ── PDF ──
       if (cat === 'pdf') {
         const iframe = el('iframe', { src, title: item.name });
         return iframe;
       }
 
-      // Text (try to read)
+      // ── Text ──
       if (item.mimetype.startsWith('text/') || this.isTextLike(item.name)) {
         if (item.kind === 'local' && item.src instanceof File) {
           return this.renderTextFile(item);
@@ -404,7 +441,7 @@
         }
       }
 
-      // Fallback
+      // ── Fallback ──
       return this.noPreview(
         'Preview not available for this file type',
         'You can still download it'

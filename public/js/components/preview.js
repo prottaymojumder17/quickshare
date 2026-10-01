@@ -5,24 +5,31 @@
 (function () {
   'use strict';
   const QS = window.QS;
-  const { el, formatSize, fileIcon, fileCategory, escapeHtml } = QS.utils;
+  const { el, formatSize, fileIcon, fileCategory } = QS.utils;
 
   const preview = {
     countdownTimer: null,
 
-    /**
-     * Main render — dispatches by type
-     */
+    // Store current transfer info for preview navigation
+    _currentFiles: [],
+    _currentCode: null,
+
+    /* ═══════════════════════════════════════════════
+       MAIN RENDER
+       ═══════════════════════════════════════════════ */
     render(resultEl, code, info) {
       resultEl.innerHTML = '';
       resultEl.hidden = false;
+
+      // Store for later access
+      this._currentCode = code;
+      this._currentFiles = info.files || [];
 
       if (info.type === 'text') {
         this.renderText(resultEl, code, info);
       } else if (info.type === 'files') {
         this.renderMultiFile(resultEl, code, info);
       } else {
-        // Legacy single file
         this.renderSingleFile(resultEl, code, info);
       }
     },
@@ -63,7 +70,7 @@
       actions.appendChild(newBtn);
       root.appendChild(actions);
 
-      this.startExpiryCountdown(info.expiresInSeconds);
+      this.appendExpiryBar(root, info);
     },
 
     /* ═══════════════════════════════════════════════
@@ -115,11 +122,12 @@
     renderMultiFile(root, code, info) {
       const count = info.fileCount || (info.files ? info.files.length : 0);
       const icon = '📦';
-      const meta = `${count} file${count === 1 ? '' : 's'} · ${info.totalSizeFormatted || formatSize(info.totalSize)} · ${info.downloads || 0} downloads`;
+      const totalSize = info.totalSizeFormatted || formatSize(info.totalSize);
+      const meta = `${count} file${count === 1 ? '' : 's'} · ${totalSize} · ${info.downloads || 0} downloads`;
 
       root.appendChild(this.header(icon, `${count} Files Received`, meta));
 
-      // ZIP download button (prominent)
+      // ── ZIP download button ──
       const zipWrap = el('div', { class: 'zip-download-wrap' });
 
       const zipBtn = el('a', {
@@ -130,7 +138,7 @@
           <span class="zip-icon">📦</span>
           <span class="zip-text">
             <span class="zip-title">Download All as ZIP</span>
-            <span class="zip-subtitle">${count} files · ${info.totalSizeFormatted || formatSize(info.totalSize)}</span>
+            <span class="zip-subtitle">${count} files · ${totalSize}</span>
           </span>
         `
       });
@@ -138,7 +146,7 @@
       zipWrap.appendChild(zipBtn);
       root.appendChild(zipWrap);
 
-      // File list
+      // ── File list ──
       const filesWrap = el('div', { class: 'received-files' });
 
       const sortedFiles = [...(info.files || [])].sort(
@@ -146,12 +154,14 @@
       );
 
       sortedFiles.forEach((file, idx) => {
-        filesWrap.appendChild(this.renderFileRow(code, file, idx + 1));
+        filesWrap.appendChild(
+          this.renderFileRow(code, file, idx + 1, sortedFiles)
+        );
       });
 
       root.appendChild(filesWrap);
 
-      // Copy link + Receive another
+      // ── Actions ──
       const actions = el('div', { class: 'result-actions' });
 
       const copyLinkBtn = el('button', {
@@ -178,8 +188,13 @@
 
     /**
      * Render one file row in multi-file list
+     *
+     * @param {string} code — transfer code
+     * @param {object} file — this file's data
+     * @param {number} index — display index (1-based)
+     * @param {Array} allFiles — all files (for preview navigation)
      */
-    renderFileRow(code, file, index) {
+    renderFileRow(code, file, index, allFiles) {
       const row = el('div', { class: 'received-file-row' });
 
       // Index badge
@@ -196,29 +211,32 @@
       );
 
       // Info
-      const info = el('div', { class: 'received-file-info' });
-      info.appendChild(
+      const infoEl = el('div', { class: 'received-file-info' });
+      infoEl.appendChild(
         el('div', {
           class: 'received-file-name',
           text: file.filename,
           title: file.filename
         })
       );
-      info.appendChild(
+
+      const metaText =
+        `${file.sizeFormatted || formatSize(file.size)} · ${(file.mimetype || '').split('/')[1] || ''}`
+          .replace(/·\s*$/, '')
+          .trim();
+
+      infoEl.appendChild(
         el('div', {
           class: 'received-file-meta',
-          text: `${file.sizeFormatted || formatSize(file.size)} · ${(file.mimetype || '').split('/')[1] || ''}`.replace(
-            /·\s*$/,
-            ''
-          )
+          text: metaText
         })
       );
-      row.appendChild(info);
+      row.appendChild(infoEl);
 
       // Actions
       const actions = el('div', { class: 'received-file-actions' });
 
-      // Preview (if previewable)
+      // 👁️ Preview button
       if (file.previewable) {
         const previewBtn = el('button', {
           class: 'received-file-btn',
@@ -226,16 +244,22 @@
           html: '👁️',
           onclick: e => {
             e.preventDefault();
-            QS.previewModal?.openFromReceived(code, {
-              type: 'files',
-              files: [file]
-            });
+
+            // ✅ FIX: pass ALL files + startFileId
+            QS.previewModal?.openFromReceived(
+              code,
+              {
+                type: 'files',
+                files: allFiles || this._currentFiles || [file]
+              },
+              file.id
+            );
           }
         });
         actions.appendChild(previewBtn);
       }
 
-      // Download
+      // ⬇️ Download
       const dlBtn = el('a', {
         class: 'received-file-btn',
         href: `/api/download/${code}/${file.id}`,
@@ -256,11 +280,11 @@
     header(icon, title, meta) {
       const wrap = el('div', { class: 'result-header' });
       const iconEl = el('div', { class: 'result-icon', text: icon });
-      const info = el('div', { class: 'result-info' });
-      info.appendChild(el('div', { class: 'result-title', text: title }));
-      info.appendChild(el('div', { class: 'result-meta', text: meta }));
+      const infoEl = el('div', { class: 'result-info' });
+      infoEl.appendChild(el('div', { class: 'result-title', text: title }));
+      infoEl.appendChild(el('div', { class: 'result-meta', text: meta }));
       wrap.appendChild(iconEl);
-      wrap.appendChild(info);
+      wrap.appendChild(infoEl);
       return wrap;
     },
 
@@ -308,29 +332,26 @@
 
     appendExpiryBar(root, info) {
       if (!info.expiresInSeconds) return;
+
       const hint = el('div', {
         class: 'expiry-bar',
         html: `<span>⏱️</span> Expires in <strong id="receiveExpiry">${QS.utils.formatDuration(info.expiresInSeconds * 1000)}</strong>`
       });
+
       root.appendChild(hint);
       this.startReceiveCountdown(info.expiresInSeconds);
     },
 
     startExpiryCountdown(seconds) {
-      this.appendToExisting(seconds);
-    },
-
-    appendToExisting(seconds) {
-      // Reuse for text — same countdown
       this.startReceiveCountdown(seconds);
     },
 
     startReceiveCountdown(seconds) {
       this.stopReceiveCountdown();
 
-      // If no expiry element in DOM, create one
       let el2 = document.getElementById('receiveExpiry');
       if (!el2) {
+        // Not present — create one
         const root = document.getElementById('receiveResult');
         if (root) {
           const hint = document.createElement('div');

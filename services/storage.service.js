@@ -1,6 +1,7 @@
 // services/storage.service.js
 // সব transfer এখানে store হয় (in-memory Map)
 // Multi-file + single-file + text support
+// ⚠️ Memory limits — server crash protect
 
 const { generateFileId, dedupeFilename } = require('../utils/fileId');
 
@@ -50,12 +51,93 @@ const { generateFileId, dedupeFilename } = require('../utils/fileId');
 
 const transfers = new Map();
 
-/* ═══════════════════════════════════════════════
-   SAVE — Multi-file
-   ═══════════════════════════════════════════════ */
+// ═══════════════════════════════════════════════
+//  MEMORY LIMITS
+// ═══════════════════════════════════════════════
+
+const MAX_TOTAL_MEMORY = 400 * 1024 * 1024; // 400 MB max RAM usage
+const MAX_TRANSFERS = 100; // Max 100 active transfers
+
+// ═══════════════════════════════════════════════
+//  MEMORY TRACKING
+// ═══════════════════════════════════════════════
+
+function getCurrentMemoryUsage() {
+  let total = 0;
+  for (const transfer of transfers.values()) {
+    if (transfer.type === 'files') {
+      total += transfer.totalSize || 0;
+    } else if (transfer.type === 'file') {
+      total += transfer.size || 0;
+    } else if (transfer.type === 'text') {
+      total += transfer.size || 0;
+    }
+  }
+  return total;
+}
+
+function getTransferCount() {
+  return transfers.size;
+}
+
+function canAcceptNewTransfer(incomingSize) {
+  const currentMemory = getCurrentMemoryUsage();
+  const currentCount = getTransferCount();
+
+  if (currentCount >= MAX_TRANSFERS) {
+    return {
+      ok: false,
+      reason: 'MAX_TRANSFERS',
+      message: `Server at capacity (${MAX_TRANSFERS} transfers). Please try again in a few minutes.`
+    };
+  }
+
+  if (currentMemory + incomingSize > MAX_TOTAL_MEMORY) {
+    return {
+      ok: false,
+      reason: 'MEMORY_LIMIT',
+      message: 'Server memory full. Please try again in a few minutes.'
+    };
+  }
+
+  return { ok: true };
+}
+
+function getMemoryStats() {
+  const used = getCurrentMemoryUsage();
+  return {
+    totalMemoryUsed: used,
+    totalMemoryUsedFormatted: `${(used / 1024 / 1024).toFixed(2)} MB`,
+    maxMemory: MAX_TOTAL_MEMORY,
+    maxMemoryFormatted: `${(MAX_TOTAL_MEMORY / 1024 / 1024).toFixed(0)} MB`,
+    transferCount: getTransferCount(),
+    maxTransfers: MAX_TRANSFERS,
+    memoryPercent: ((used / MAX_TOTAL_MEMORY) * 100).toFixed(1) + '%',
+    transferPercent:
+      ((getTransferCount() / MAX_TRANSFERS) * 100).toFixed(1) + '%'
+  };
+}
+
+// ═══════════════════════════════════════════════
+//  SAVE — Multi-file
+// ═══════════════════════════════════════════════
 function saveFiles({ code, files, expiresAt }) {
   if (!Array.isArray(files) || files.length === 0) {
     throw new Error('saveFiles: files array is required');
+  }
+
+  // ⚡ Memory limit check
+  const totalIncoming = files.reduce(
+    (sum, f) => sum + (f.buffer?.length || 0),
+    0
+  );
+  const check = canAcceptNewTransfer(totalIncoming);
+
+  if (!check.ok) {
+    const err = new Error(check.message);
+    err.code = check.reason;
+    err.statusCode = 503;
+    throw err;
   }
 
   const existingNames = [];
@@ -95,10 +177,19 @@ function saveFiles({ code, files, expiresAt }) {
   });
 }
 
-/* ═══════════════════════════════════════════════
-   SAVE — Single file (legacy)
-   ═══════════════════════════════════════════════ */
+// ═══════════════════════════════════════════════
+//  SAVE — Single file (legacy)
+// ═══════════════════════════════════════════════
 function saveFile({ code, buffer, filename, mimetype, size, expiresAt }) {
+  // ⚡ Memory limit check
+  const check = canAcceptNewTransfer(size || buffer?.length || 0);
+  if (!check.ok) {
+    const err = new Error(check.message);
+    err.code = check.reason;
+    err.statusCode = 503;
+    throw err;
+  }
+
   transfers.set(code, {
     code,
     type: 'file',
@@ -112,24 +203,35 @@ function saveFile({ code, buffer, filename, mimetype, size, expiresAt }) {
   });
 }
 
-/* ═══════════════════════════════════════════════
-   SAVE — Text
-   ═══════════════════════════════════════════════ */
+// ═══════════════════════════════════════════════
+//  SAVE — Text
+// ═══════════════════════════════════════════════
 function saveText({ code, text, expiresAt }) {
+  const size = Buffer.byteLength(text, 'utf8');
+
+  // ⚡ Memory limit check (text is small but still)
+  const check = canAcceptNewTransfer(size);
+  if (!check.ok) {
+    const err = new Error(check.message);
+    err.code = check.reason;
+    err.statusCode = 503;
+    throw err;
+  }
+
   transfers.set(code, {
     code,
     type: 'text',
     text,
-    size: Buffer.byteLength(text, 'utf8'),
+    size,
     downloads: 0,
     createdAt: Date.now(),
     expiresAt
   });
 }
 
-/* ═══════════════════════════════════════════════
-   GET
-   ═══════════════════════════════════════════════ */
+// ═══════════════════════════════════════════════
+//  GET
+// ═══════════════════════════════════════════════
 
 /**
  * Code দিয়ে transfer বের করে
@@ -139,14 +241,10 @@ function getTransfer(code) {
 }
 
 /**
- * ⭐ NEW: Transfer থেকে specific file বের করে
+ * Transfer থেকে specific file বের করে
  * Supports:
  *   - Multi-file (type: 'files') — id দিয়ে
  *   - Single-file (type: 'file') — 'default' id
- *
- * @param {string} code
- * @param {string} fileId — file id OR 'default'
- * @returns {Object|null} — { id, data, filename, mimetype, size }
  */
 function getFileFromTransfer(code, fileId = 'default') {
   const transfer = transfers.get(code);
@@ -154,7 +252,6 @@ function getFileFromTransfer(code, fileId = 'default') {
 
   // ── Multi-file ──
   if (transfer.type === 'files') {
-    // 'default' হলে প্রথম file দিই
     if (fileId === 'default') {
       const sorted = [...transfer.files].sort((a, b) => a.order - b.order);
       return sorted[0] || null;
@@ -176,13 +273,10 @@ function getFileFromTransfer(code, fileId = 'default') {
   return null;
 }
 
-/* ═══════════════════════════════════════════════
-   DOWNLOAD COUNT
-   ═══════════════════════════════════════════════ */
+// ═══════════════════════════════════════════════
+//  DOWNLOAD COUNT
+// ═══════════════════════════════════════════════
 
-/**
- * Transfer-এর overall download count বাড়ায়
- */
 function incrementDownload(code) {
   const t = transfers.get(code);
   if (t) {
@@ -192,9 +286,6 @@ function incrementDownload(code) {
   return 0;
 }
 
-/**
- * ⭐ NEW: Multi-file transfer-এ specific file-এর download count বাড়ায়
- */
 function incrementFileDownload(code, fileId) {
   const t = transfers.get(code);
   if (!t || t.type !== 'files') return 0;
@@ -202,16 +293,15 @@ function incrementFileDownload(code, fileId) {
   const file = t.files.find(f => f.id === fileId);
   if (file) {
     file.downloads = (file.downloads || 0) + 1;
-    // Overall download count-ও বাড়াই
     t.downloads = (t.downloads || 0) + 1;
     return file.downloads;
   }
   return 0;
 }
 
-/* ═══════════════════════════════════════════════
-   DELETE
-   ═══════════════════════════════════════════════ */
+// ═══════════════════════════════════════════════
+//  DELETE
+// ═══════════════════════════════════════════════
 
 function deleteTransfer(code) {
   return transfers.delete(code);
@@ -235,9 +325,9 @@ function deleteFileFromTransfer(code, fileId) {
   return transfer.files.length < before;
 }
 
-/* ═══════════════════════════════════════════════
-   REORDER
-   ═══════════════════════════════════════════════ */
+// ═══════════════════════════════════════════════
+//  REORDER
+// ═══════════════════════════════════════════════
 function reorderFiles(code, orderedIds) {
   const transfer = transfers.get(code);
   if (!transfer || transfer.type !== 'files') return false;
@@ -263,9 +353,9 @@ function reorderFiles(code, orderedIds) {
   return true;
 }
 
-/* ═══════════════════════════════════════════════
-   CLEANUP
-   ═══════════════════════════════════════════════ */
+// ═══════════════════════════════════════════════
+//  CLEANUP
+// ═══════════════════════════════════════════════
 function cleanupExpired() {
   const now = Date.now();
   let removed = 0;
@@ -280,9 +370,28 @@ function cleanupExpired() {
   return removed;
 }
 
-/* ═══════════════════════════════════════════════
-   UTILS
-   ═══════════════════════════════════════════════ */
+/**
+ * ⚡ EMERGENCY: Oldest transfers delete (memory pressure)
+ * @param {number} count — how many to remove
+ */
+function emergencyEvict(count = 10) {
+  // Sort by createdAt (oldest first)
+  const sorted = [...transfers.entries()].sort(
+    (a, b) => (a[1].createdAt || 0) - (b[1].createdAt || 0)
+  );
+
+  let removed = 0;
+  for (let i = 0; i < Math.min(count, sorted.length); i++) {
+    transfers.delete(sorted[i][0]);
+    removed++;
+  }
+
+  return removed;
+}
+
+// ═══════════════════════════════════════════════
+//  UTILS
+// ═══════════════════════════════════════════════
 function hasCode(code) {
   return transfers.has(code);
 }
@@ -304,9 +413,9 @@ function getStats() {
   };
 }
 
-/* ═══════════════════════════════════════════════
-   EXPORTS
-   ═══════════════════════════════════════════════ */
+// ═══════════════════════════════════════════════
+//  EXPORTS
+// ═══════════════════════════════════════════════
 module.exports = {
   // Save
   saveFiles,
@@ -315,11 +424,11 @@ module.exports = {
 
   // Get
   getTransfer,
-  getFileFromTransfer, // ⭐ NEW — supports 'default' for legacy
+  getFileFromTransfer,
 
   // Download count
   incrementDownload,
-  incrementFileDownload, // ⭐ NEW
+  incrementFileDownload,
 
   // Delete
   deleteTransfer,
@@ -328,8 +437,16 @@ module.exports = {
   // Reorder
   reorderFiles,
 
-  // Utils
+  // Cleanup
   cleanupExpired,
+  emergencyEvict,
+
+  // Utils
   hasCode,
-  getStats
+  getStats,
+
+  // Memory stats
+  getMemoryStats,
+  getCurrentMemoryUsage,
+  canAcceptNewTransfer
 };

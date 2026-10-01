@@ -18,11 +18,9 @@
   opacity: 0;
   visibility: hidden;
   transform: translateY(20px) scale(0.85);
-  transition: opacity var(--t-base), transform var(--t-base), visibility var(--t-base),
-    background var(--t-base), color var(--t-base);
-  overflow: hidden;
-  /* backdrop-filter সরিয়ে দিলাম — mobile-এ lag করে */
-  /* এর বদলে solid background */
+  transition: opacity var(--t-base), transform var(--t-base),
+    visibility var(--t-base), background var(--t-base), color var(--t-base);
+  overflow: visible;
 }
 
 /* Show state */
@@ -32,7 +30,7 @@
   transform: translateY(0) scale(1);
 }
 
-/* Hover */
+/* Hover (only on real hover devices) */
 @media (hover: hover) and (pointer: fine) {
   .back-to-top:hover {
     transform: translateY(-3px) scale(1.06);
@@ -42,7 +40,7 @@
     box-shadow: 0 10px 30px var(--primary-glow);
   }
 
-  .back-to-top:hover svg {
+  .back-to-top:hover svg:not(.scroll-ring) {
     transform: translateY(-2px);
   }
 }
@@ -51,24 +49,33 @@
   transform: translateY(-1px) scale(1.02);
 }
 
-/* Icon */
-.back-to-top svg {
+/* ── Arrow icon ── */
+.back-to-top > svg:not(.scroll-ring) {
   display: block;
+  position: relative;
+  z-index: 2;
   transition: transform var(--t-base);
-  /* Fix: subpixel rendering */
   shape-rendering: geometricPrecision;
   backface-visibility: hidden;
 }
 
-/* ── Progress ring (mobile-এ hide) ── */
+/* ═══════════════════════════════════════════════
+   Progress ring
+   ═══════════════════════════════════════════════ */
+
 .back-to-top .scroll-ring {
   position: absolute;
-  inset: 0;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   border-radius: 50%;
-  transform: rotate(-90deg);
   pointer-events: none;
-  /* Fix: subpixel rendering */
+  z-index: 1;
+  overflow: visible;
+  /* Subpixel + antialiasing */
   shape-rendering: geometricPrecision;
+  /* SVG নিজেই rotate করে (JS-এ), CSS-এ না */
 }
 
 .back-to-top .scroll-ring circle {
@@ -76,12 +83,32 @@
   stroke: var(--primary);
   stroke-width: 2;
   stroke-linecap: round;
-  /* Fix: white buffer issue */
+  stroke-linejoin: round;
+  /* 🔑 সবচেয়ে গুরুত্বপূর্ণ fix — mobile-এ stroke scale হবে না */
+  vector-effect: non-scaling-stroke;
+  /* GPU acceleration */
   will-change: stroke-dashoffset;
   transition: stroke-dashoffset 0.1s linear;
 }
 
-/* ── Mobile ── */
+/* Light theme-এ একটু অন্য color */
+[data-theme="light"] .back-to-top .scroll-ring circle {
+  stroke: var(--primary);
+}
+
+/* ═══════════════════════════════════════════════
+   Hover state — ring আর দেখাবে না
+   ═══════════════════════════════════════════════ */
+@media (hover: hover) and (pointer: fine) {
+  .back-to-top:hover .scroll-ring {
+    opacity: 0;
+    transition: opacity var(--t-fast);
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   Tablet
+   ═══════════════════════════════════════════════ */
 @media (max-width: 900px) {
   .back-to-top {
     width: 44px;
@@ -91,31 +118,43 @@
   }
 }
 
+/* ═══════════════════════════════════════════════
+   Mobile
+   ═══════════════════════════════════════════════ */
 @media (max-width: 600px) {
   .back-to-top {
-    width: 42px;
-    height: 42px;
+    width: 46px;
+    height: 46px;
     bottom: 18px;
     right: 18px;
-    /* Mobile-এ ring-এর white buffer এড়াতে */
     background: var(--bg-elevated);
   }
 
-  .back-to-top svg {
+  .back-to-top > svg:not(.scroll-ring) {
     width: 20px;
     height: 20px;
   }
 
-  /* 📱 Mobile-এ progress ring hide */
+  /* 📱 Ring mobile-এও থাকবে */
   .back-to-top .scroll-ring {
-    display: none;
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Mobile-এ ring-এর stroke আরো ভিতরে */
+  .back-to-top .scroll-ring circle {
+    stroke-width: 2;
   }
 }
 
-/* ── Reduce motion ── */
+/* ═══════════════════════════════════════════════
+   Reduce motion
+   ═══════════════════════════════════════════════ */
 @media (prefers-reduced-motion: reduce) {
   .back-to-top,
-  .back-to-top svg {
+  .back-to-top > svg:not(.scroll-ring),
+  .back-to-top .scroll-ring circle {
     transition: none;
   }
 }

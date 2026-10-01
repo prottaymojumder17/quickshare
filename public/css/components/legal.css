@@ -1,0 +1,228 @@
+/* legal.css — Privacy, Terms, Cookies pages */
+
+.legal-page {
+  padding: calc(var(--navbar-h) + 60px) 0 80px;
+  min-height: 100vh;
+}
+
+.legal-container {
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 0 var(--s-6);
+}
+
+/* ── Header ── */
+.legal-header {
+  text-align: center;
+  margin-bottom: var(--s-10);
+  padding-bottom: var(--s-8);
+  border-bottom: 1px solid var(--border);
+}
+
+.legal-tag {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--primary);
+  background: var(--primary-soft);
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  margin-bottom: var(--s-4);
+}
+
+.legal-title {
+  font-size: clamp(2rem, 5vw, 3rem);
+  margin-bottom: var(--s-3);
+  background: var(--gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.legal-updated {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+/* ── Content ── */
+.legal-content {
+  color: var(--text-soft);
+  font-size: 1rem;
+  line-height: 1.75;
+}
+
+.legal-content section {
+  margin-bottom: var(--s-8);
+  padding-bottom: var(--s-6);
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.legal-content section:last-of-type {
+  border-bottom: none;
+}
+
+.legal-content h2 {
+  font-size: 1.35rem;
+  color: var(--text);
+  margin-bottom: var(--s-4);
+  margin-top: var(--s-6);
+  padding-left: var(--s-3);
+  border-left: 3px solid var(--primary);
+}
+
+.legal-content h3 {
+  font-size: 1.05rem;
+  color: var(--text);
+  margin-top: var(--s-5);
+  margin-bottom: var(--s-3);
+  font-weight: 600;
+}
+
+.legal-content p {
+  margin-bottom: var(--s-3);
+}
+
+.legal-content ul {
+  list-style: none;
+  padding-left: 0;
+  margin-bottom: var(--s-4);
+}
+
+.legal-content ul li {
+  position: relative;
+  padding-left: 26px;
+  margin-bottom: var(--s-2);
+}
+
+.legal-content ul li::before {
+  content: '→';
+  position: absolute;
+  left: 0;
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.legal-content strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.legal-content code {
+  background: var(--bg-input);
+  padding: 2px 8px;
+  border-radius: var(--radius-xs);
+  font-size: 0.88em;
+  color: var(--accent);
+  border: 1px solid var(--border);
+}
+
+.legal-content a {
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* ── Cookie table ── */
+.cookie-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: var(--s-4) 0;
+  font-size: 0.9rem;
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.cookie-table thead {
+  background: var(--bg-elevated);
+}
+
+.cookie-table th,
+.cookie-table td {
+  padding: var(--s-3) var(--s-4);
+  text-align: left;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.cookie-table th {
+  font-weight: 700;
+  color: var(--text);
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.cookie-table tr:last-child td {
+  border-bottom: none;
+}
+
+.cookie-table code {
+  font-size: 0.82em;
+}
+
+/* ── Back button ── */
+.legal-back {
+  margin-top: var(--s-10);
+  padding-top: var(--s-6);
+  border-top: 1px solid var(--border);
+  text-align: center;
+}
+
+/* ── Mobile ── */
+@media (max-width: 767px) {
+  .legal-page {
+    padding: calc(var(--navbar-h) + 30px) 0 60px;
+  }
+
+  .legal-container {
+    padding: 0 var(--s-4);
+  }
+
+  .legal-content {
+    font-size: 0.95rem;
+  }
+
+  .legal-content h2 {
+    font-size: 1.2rem;
+  }
+
+  .cookie-table {
+    font-size: 0.8rem;
+  }
+
+  .cookie-table th,
+  .cookie-table td {
+    padding: var(--s-2) var(--s-3);
+  }
+
+  /* Stack table on very small */
+  @media (max-width: 500px) {
+    .cookie-table thead {
+      display: none;
+    }
+
+    .cookie-table tr {
+      display: block;
+      border-bottom: 1px solid var(--border);
+      padding: var(--s-3);
+    }
+
+    .cookie-table td {
+      display: block;
+      border: none;
+      padding: 4px 0;
+    }
+
+    .cookie-table td::before {
+      content: attr(data-label);
+      font-weight: 700;
+      color: var(--text-muted);
+      margin-right: 8px;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+    }
+  }
+}

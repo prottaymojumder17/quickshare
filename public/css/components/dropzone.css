@@ -1,0 +1,94 @@
+/* dropzone.css */
+
+.dropzone {
+  position: relative;
+  border: 2px dashed var(--border-strong);
+  border-radius: var(--radius-lg);
+  padding: var(--s-10) var(--s-6);
+  text-align: center;
+  cursor: pointer;
+  transition: all var(--t-base);
+  margin-bottom: var(--s-4);
+  background: var(--bg-input);
+  overflow: hidden;
+}
+
+.dropzone:hover {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+}
+
+.dropzone.dragover {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+  transform: scale(1.01);
+  box-shadow: 0 0 0 6px var(--primary-soft), var(--shadow-glow);
+}
+
+.dropzone.has-file {
+  display: none;
+}
+
+/* ── Content ── */
+.dropzone-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-3);
+  pointer-events: none;
+}
+
+.dropzone-icon {
+  font-size: 2.6rem;
+  animation: float 3s ease-in-out infinite;
+  filter: drop-shadow(0 4px 12px var(--primary-glow));
+}
+
+.dropzone-title {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.dropzone-hint {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.dropzone .link {
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  font-weight: 600;
+}
+
+/* ── Overlay (drag visual) ── */
+.dropzone-overlay {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--gradient-soft);
+  opacity: 0;
+  transition: opacity var(--t-base);
+  pointer-events: none;
+}
+
+.dropzone.dragover .dropzone-overlay {
+  opacity: 1;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* ── Global drag overlay (when dragging over page) ── */
+body.dragging-file .dropzone {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 6px var(--primary-soft);
+}
+
+/* ── Reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+  .dropzone-icon {
+    animation: none;
+  }
+}

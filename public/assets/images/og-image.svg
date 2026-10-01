@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0a0a0f"/>
+      <stop offset="50%" stop-color="#111827"/>
+      <stop offset="100%" stop-color="#0a0a0f"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#6366f1"/>
+      <stop offset="100%" stop-color="#06b6d4"/>
+    </linearGradient>
+    <radialGradient id="orb1" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#6366f1" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#6366f1" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="orb2" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#06b6d4" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#06b6d4" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <circle cx="200" cy="150" r="300" fill="url(#orb1)"/>
+  <circle cx="1000" cy="500" r="280" fill="url(#orb2)"/>
+
+  <!-- Logo mark -->
+  <g transform="translate(80, 80)">
+    <rect width="72" height="72" rx="18" fill="url(#accent)"/>
+    <path d="M41 10 L22 42 L34 42 L31 62 L51 30 L38 30 Z" fill="#fff"/>
+  </g>
+
+  <!-- Title -->
+  <text x="80" y="290" font-family="Space Grotesk, Arial, sans-serif" font-size="88" font-weight="700" fill="#f1f5f9">
+    QuickShare
+  </text>
+
+  <!-- Subtitle -->
+  <text x="80" y="360" font-family="Inter, Arial, sans-serif" font-size="34" fill="#94a3b8">
+    Share files instantly with a code
+  </text>
+
+  <!-- Feature pills -->
+  <g transform="translate(80, 430)">
+    <rect x="0" y="0" width="220" height="52" rx="26" fill="rgba(99,102,241,0.15)" stroke="rgba(99,102,241,0.4)" stroke-width="1"/>
+    <text x="110" y="34" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="20" fill="#c7d2fe">
+      No Signup
+    </text>
+
+    <rect x="240" y="0" width="220" height="52" rx="26" fill="rgba(6,182,212,0.15)" stroke="rgba(6,182,212,0.4)" stroke-width="1"/>
+    <text x="350" y="34" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="20" fill="#a5f3fc">
+      Any File
+    </text>
+
+    <rect x="480" y="0" width="220" height="52" rx="26" fill="rgba(34,197,94,0.15)" stroke="rgba(34,197,94,0.4)" stroke-width="1"/>
+    <text x="590" y="34" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="20" fill="#bbf7d0">
+      Auto Delete
+    </text>
+  </g>
+</svg>

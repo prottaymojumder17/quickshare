@@ -1,0 +1,119 @@
+/* stats.css */
+
+.stats {
+  padding: var(--s-16) 0;
+  position: relative;
+  background: var(--bg-soft);
+  border-top: 1px solid var(--border-soft);
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--s-4);
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+/* ── Item ── */
+.stat-item {
+  text-align: center;
+  padding: var(--s-6) var(--s-4);
+  position: relative;
+  transition: transform var(--t-base);
+}
+
+.stat-item:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1px;
+  height: 50%;
+  background: var(--border);
+}
+
+.stat-item:hover {
+  transform: scale(1.05);
+}
+
+/* ── Number ── */
+.stat-number {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: clamp(2rem, 4vw, 2.8rem);
+  font-weight: 700;
+  line-height: 1.1;
+  background: var(--gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: var(--s-2);
+  letter-spacing: -0.02em;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.stat-unit {
+  font-size: 0.55em;
+  font-weight: 600;
+  opacity: 0.85;
+}
+
+/* ── Label ── */
+.stat-label {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* ── Tablet ── */
+@media (max-width: 900px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .stat-item:nth-child(2)::after {
+    display: none;
+  }
+
+  .stat-item:nth-child(1),
+  .stat-item:nth-child(2) {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: var(--s-6);
+  }
+}
+
+/* ── Mobile ── */
+@media (max-width: 600px) {
+  .stats {
+    padding: var(--s-12) 0;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .stat-item::after {
+    display: none !important;
+  }
+
+  .stat-item {
+    padding: var(--s-5) var(--s-4);
+  }
+
+  .stat-item:not(:last-child) {
+    border-bottom: 1px solid var(--border);
+  }
+
+  .stat-item:nth-child(1),
+  .stat-item:nth-child(2) {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: var(--s-5);
+  }
+}

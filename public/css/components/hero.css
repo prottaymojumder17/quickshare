@@ -1,0 +1,216 @@
+/* hero.css */
+
+.hero {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: calc(var(--navbar-h) + 40px) 0 60px;
+  overflow: hidden;
+}
+
+/* ── Background Orbs ── */
+.hero-bg {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.hero-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.45;
+  animation: floatSlow 12s ease-in-out infinite;
+}
+
+.hero-orb-1 {
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, var(--primary), transparent 70%);
+  top: -150px;
+  left: -150px;
+  animation-delay: 0s;
+}
+
+.hero-orb-2 {
+  width: 450px;
+  height: 450px;
+  background: radial-gradient(circle, var(--accent), transparent 70%);
+  bottom: -150px;
+  right: -150px;
+  animation-delay: -4s;
+}
+
+.hero-orb-3 {
+  width: 350px;
+  height: 350px;
+  background: radial-gradient(circle, #a855f7, transparent 70%);
+  top: 40%;
+  left: 50%;
+  transform: translateX(-50%);
+  animation-delay: -8s;
+  opacity: 0.3;
+}
+
+/* ── Container ── */
+.hero-container {
+  position: relative;
+  z-index: 1;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 var(--s-6);
+  text-align: center;
+}
+
+/* ── Badge ── */
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: 8px 16px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--text-soft);
+  margin-bottom: var(--s-6);
+  animation: fadeInDown 0.6s ease both;
+  box-shadow: var(--shadow-sm);
+}
+
+.badge-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--success);
+  box-shadow: 0 0 10px var(--success);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* ── Title ── */
+.hero-title {
+  margin-bottom: var(--s-5);
+  animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
+  letter-spacing: -0.03em;
+}
+
+/* ── Subtitle ── */
+.hero-subtitle {
+  max-width: 620px;
+  margin: 0 auto var(--s-8);
+  font-size: clamp(1rem, 1.3vw, 1.15rem);
+  color: var(--text-muted);
+  line-height: 1.7;
+  animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
+}
+
+.hero-subtitle strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* ── CTA ── */
+.hero-cta {
+  display: flex;
+  gap: var(--s-3);
+  justify-content: center;
+  flex-wrap: wrap;
+  animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both;
+}
+
+/* ── Floating Icons ── */
+.hero-floating-icons {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.float-icon {
+  position: absolute;
+  font-size: 2rem;
+  opacity: 0.35;
+  animation: float 4s ease-in-out infinite;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3));
+}
+
+.float-icon[data-delay="0"] {
+  top: 15%;
+  left: 8%;
+  animation-delay: 0s;
+}
+.float-icon[data-delay="1"] {
+  top: 25%;
+  right: 10%;
+  animation-delay: -0.6s;
+}
+.float-icon[data-delay="2"] {
+  bottom: 30%;
+  left: 12%;
+  animation-delay: -1.2s;
+  font-size: 1.6rem;
+}
+.float-icon[data-delay="3"] {
+  bottom: 20%;
+  right: 15%;
+  animation-delay: -1.8s;
+}
+.float-icon[data-delay="4"] {
+  top: 45%;
+  left: 5%;
+  animation-delay: -2.4s;
+  font-size: 1.8rem;
+}
+.float-icon[data-delay="5"] {
+  top: 55%;
+  right: 6%;
+  animation-delay: -3s;
+  font-size: 2.2rem;
+}
+
+/* ── Scroll indicator ── */
+.hero-scroll-indicator {
+  position: absolute;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-2);
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  animation: fadeIn 1s ease 1s both;
+  z-index: 1;
+}
+
+.scroll-line {
+  width: 1px;
+  height: 40px;
+  background: linear-gradient(to bottom, var(--text-faint), transparent);
+  position: relative;
+  overflow: hidden;
+}
+
+.scroll-line::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 30%;
+  background: var(--primary);
+  animation: scrollDot 2s ease-in-out infinite;
+}
+
+@keyframes scrollDot {
+  0% { top: -30%; }
+  100% { top: 100%; }
+}

@@ -1,0 +1,147 @@
+/* responsive.css
+   Media queries — mobile, tablet, desktop
+   ============================================ */
+
+/* ══════════ Large Desktop (1440px+) ══════════ */
+@media (min-width: 1440px) {
+  :root {
+    --container: 1280px;
+  }
+}
+
+/* ══════════ Desktop (1024px - 1279px) — default ══════════ */
+
+/* ══════════ Tablet (768px - 1023px) ══════════ */
+@media (max-width: 1023px) {
+  :root {
+    --container: 100%;
+  }
+
+  .section-container {
+    padding: 0 var(--s-5);
+  }
+}
+
+/* ══════════ Mobile (481px - 767px) ══════════ */
+@media (max-width: 767px) {
+  html {
+    font-size: 15px;
+  }
+
+  .section-container {
+    padding: 0 var(--s-4);
+  }
+
+  .section-header {
+    margin-bottom: var(--s-8);
+  }
+
+  /* Navbar */
+  .navbar-container {
+    padding: 0 var(--s-4);
+  }
+
+  .navbar-links {
+    display: none !important;
+  }
+
+  .mobile-menu-btn {
+    display: flex !important;
+  }
+
+  /* Hero */
+  .hero-container {
+    padding: var(--s-16) var(--s-4) var(--s-12);
+  }
+
+  .hero-floating-icons {
+    display: none;
+  }
+
+  .hero-cta {
+    flex-direction: column;
+    gap: var(--s-3);
+    width: 100%;
+  }
+
+  .hero-cta .btn {
+    width: 100%;
+  }
+
+  /* Sections */
+  .features,
+  .steps,
+  .faq,
+  .stats,
+  .cta {
+    padding: var(--s-12) 0;
+  }
+
+  /* Button size */
+  .btn-lg {
+    padding: 13px 24px;
+    font-size: 0.95rem;
+  }
+
+  /* Footer */
+  .footer-container {
+    padding: var(--s-8) var(--s-4) var(--s-6);
+  }
+}
+
+/* ══════════ Small Mobile (< 480px) ══════════ */
+@media (max-width: 480px) {
+  html {
+    font-size: 14px;
+  }
+
+  .section-container {
+    padding: 0 var(--s-3);
+  }
+
+  h1 { font-size: 1.9rem; }
+  h2 { font-size: 1.6rem; }
+  h3 { font-size: 1.15rem; }
+
+  .section-tag {
+    font-size: 0.7rem;
+    padding: 5px 12px;
+  }
+
+  .btn {
+    padding: 11px 18px;
+    font-size: 0.9rem;
+  }
+
+  .btn-lg {
+    padding: 12px 20px;
+    font-size: 0.92rem;
+  }
+}
+
+/* ══════════ Landscape Mobile ══════════ */
+@media (max-width: 900px) and (orientation: landscape) {
+  .hero-container {
+    padding: var(--s-12) var(--s-4) var(--s-8);
+  }
+}
+
+/* ══════════ Print ══════════ */
+@media print {
+  .navbar,
+  .footer,
+  .toast-container,
+  .hero-floating-icons,
+  .hero-scroll-indicator {
+    display: none !important;
+  }
+
+  body {
+    background: #fff;
+    color: #000;
+  }
+
+  body::before {
+    display: none;
+  }
+}

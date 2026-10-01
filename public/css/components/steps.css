@@ -1,0 +1,153 @@
+/* steps.css */
+
+.steps {
+  padding: var(--s-20) 0;
+  position: relative;
+}
+
+/* ── Grid ── */
+.steps-grid {
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  gap: var(--s-4);
+  max-width: 1000px;
+  margin: 0 auto;
+  position: relative;
+}
+
+/* ── Card ── */
+.step-card {
+  flex: 1;
+  position: relative;
+  padding: var(--s-6) var(--s-5);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  text-align: center;
+  transition: all var(--t-base);
+  overflow: hidden;
+  max-width: 300px;
+}
+
+.step-card:hover {
+  transform: translateY(-6px);
+  border-color: var(--primary);
+  box-shadow: var(--shadow-lg), var(--shadow-glow);
+}
+
+/* ── Number badge ── */
+.step-number {
+  position: absolute;
+  top: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--gradient);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 0.9rem;
+  box-shadow: 0 6px 16px var(--primary-glow);
+  z-index: 2;
+  border: 3px solid var(--bg);
+}
+
+/* ── Icon ── */
+.step-icon {
+  font-size: 2.4rem;
+  margin: var(--s-4) 0 var(--s-3);
+  filter: drop-shadow(0 4px 12px var(--primary-glow));
+  transition: transform var(--t-base);
+}
+
+.step-card:hover .step-icon {
+  transform: scale(1.15) rotate(-5deg);
+}
+
+/* ── Title & text ── */
+.step-title {
+  font-size: 1.1rem;
+  margin-bottom: var(--s-2);
+  color: var(--text);
+}
+
+.step-text {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+/* ── Connector (dotted line between cards) ── */
+.step-connector {
+  align-self: center;
+  width: 40px;
+  height: 2px;
+  background-image: linear-gradient(
+    to right,
+    var(--border-strong) 50%,
+    transparent 50%
+  );
+  background-size: 12px 2px;
+  background-repeat: repeat-x;
+  position: relative;
+  flex-shrink: 0;
+  margin-top: -20px;
+}
+
+.step-connector::after {
+  content: '';
+  position: absolute;
+  right: -4px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 8px;
+  height: 8px;
+  border-top: 2px solid var(--border-strong);
+  border-right: 2px solid var(--border-strong);
+  transform: translateY(-50%) rotate(45deg);
+}
+
+/* ── Tablet ── */
+@media (max-width: 900px) {
+  .steps {
+    padding: var(--s-12) 0;
+  }
+
+  .steps-grid {
+    flex-direction: column;
+    align-items: center;
+    gap: var(--s-6);
+  }
+
+  .step-card {
+    width: 100%;
+    max-width: 400px;
+  }
+
+  .step-connector {
+    width: 2px;
+    height: 30px;
+    background-image: linear-gradient(
+      to bottom,
+      var(--border-strong) 50%,
+      transparent 50%
+    );
+    background-size: 2px 12px;
+    background-repeat: repeat-y;
+    margin-top: 0;
+    margin-left: 0;
+  }
+
+  .step-connector::after {
+    right: auto;
+    top: auto;
+    bottom: -4px;
+    left: 50%;
+    transform: translateX(-50%) rotate(135deg);
+  }
+}

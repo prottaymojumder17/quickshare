@@ -1,0 +1,70 @@
+/* progress.css */
+
+.progress-wrap {
+  margin-bottom: var(--s-4);
+  animation: fadeIn 0.3s ease;
+}
+
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--s-2);
+  font-size: 0.88rem;
+}
+
+.progress-label {
+  color: var(--text-soft);
+  font-weight: 500;
+}
+
+.progress-percent {
+  color: var(--primary);
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background: var(--bg-elevated);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  position: relative;
+}
+
+.progress-fill {
+  height: 100%;
+  width: 0%;
+  background: var(--gradient);
+  border-radius: var(--radius-full);
+  transition: width 0.25s ease;
+  position: relative;
+  box-shadow: 0 0 12px var(--primary-glow);
+}
+
+.progress-fill::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* ── Success state ── */
+.progress-fill.success {
+  background: linear-gradient(135deg, var(--success), #16a34a);
+  box-shadow: 0 0 12px var(--success);
+}
+
+/* ── Error state ── */
+.progress-fill.error {
+  background: linear-gradient(135deg, var(--danger), #dc2626);
+  box-shadow: 0 0 12px var(--danger);
+}

@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Primary Meta Tags -->
+    <title>QuickShare — Share Files Instantly with a Code</title>
+    <meta name="title" content="QuickShare — Share Files Instantly with a Code">
+    <meta name="description"
+        content="Share any file instantly — audio, video, documents, images. No signup needed. Just upload, get a code, share.">
+    <meta name="keywords" content="file transfer, share files, quick share, file sharing, send files online">
+    <meta name="author" content="QuickShare">
+    <meta name="theme-color" content="#6366f1">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://quickshare.app/">
+    <meta property="og:title" content="QuickShare — Share Files Instantly">
+    <meta property="og:description" content="No signup. No limits. Just a code. Share any file in seconds.">
+    <meta property="og:image" content="/assets/images/og-image.png">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:title" content="QuickShare — Share Files Instantly">
+    <meta property="twitter:description" content="No signup. No limits. Just a code.">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.ico">
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@500;700&display=swap"
+        rel="stylesheet">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/css/themes.css">
+    <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/animations.css">
+    <link rel="stylesheet" href="/css/components/navbar.css">
+    <link rel="stylesheet" href="/css/components/hero.css">
+    <link rel="stylesheet" href="/css/components/transfer-card.css">
+    <link rel="stylesheet" href="/css/components/dropzone.css">
+    <link rel="stylesheet" href="/css/components/progress.css">
+    <link rel="stylesheet" href="/css/components/code-display.css">
+    <link rel="stylesheet" href="/css/components/toast.css">
+    <link rel="stylesheet" href="/css/components/features.css">
+    <link rel="stylesheet" href="/css/components/steps.css">
+    <link rel="stylesheet" href="/css/components/stats.css">
+    <link rel="stylesheet" href="/css/components/faq.css">
+    <link rel="stylesheet" href="/css/components/footer.css">
+    <link rel="stylesheet" href="/css/components/back-to-top.css">
+    <link rel="stylesheet" href="/css/responsive.css">
+
+    <!-- QR Code Library (local fallback, CDN later) -->
+    <script src="/libs/qrcode.min.js" defer></script>
+</head>
+
+<body>
+
+    <!-- ═══════════════ NAVBAR ═══════════════ -->
+    <header class="navbar" id="navbar">
+        <div class="navbar-container">
+            <a href="/" class="navbar-brand">
+                <span class="brand-icon">⚡</span>
+                <span class="brand-text">QuickShare</span>
+            </a>
+
+            <nav class="navbar-links" id="navbarLinks">
+                <a href="#features" class="nav-link">Features</a>
+                <a href="#how-it-works" class="nav-link">How it Works</a>
+                <a href="#faq" class="nav-link">FAQ</a>
+                <a href="https://github.com" target="_blank" rel="noopener" class="nav-link">
+                    GitHub
+                </a>
+            </nav>
+
+            <div class="navbar-actions">
+                <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+                    <span class="theme-icon theme-icon-sun">☀️</span>
+                    <span class="theme-icon theme-icon-moon">🌙</span>
+                </button>
+                <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Menu">
+                    <span></span><span></span><span></span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- ═══════════════ HERO SECTION ═══════════════ -->
+    <section class="hero" id="home">
+        <div class="hero-bg">
+            <div class="hero-orb hero-orb-1"></div>
+            <div class="hero-orb hero-orb-2"></div>
+            <div class="hero-orb hero-orb-3"></div>
+        </div>
+
+        <div class="hero-container">
+            <div class="hero-badge">
+                <span class="badge-dot"></span>
+                <span>No Signup · No Limits · Just a Code</span>
+            </div>
+
+            <h1 class="hero-title">
+                Share Files <span class="gradient-text">Instantly</span>
+            </h1>
+
+            <p class="hero-subtitle">
+                Upload any file — audio, video, documents, images — and get a
+                <strong>secret code</strong>. Share the code, and anyone can download it. Simple as that.
+            </p>
+
+            <div class="hero-cta">
+                <a href="#app" class="btn btn-primary btn-lg">
+                    <span>Start Sharing</span>
+                    <span class="btn-arrow">→</span>
+                </a>
+                <a href="#how-it-works" class="btn btn-ghost btn-lg">
+                    <span>How it Works</span>
+                </a>
+            </div>
+
+            <div class="hero-floating-icons">
+                <div class="float-icon" data-delay="0">📁</div>
+                <div class="float-icon" data-delay="1">🎵</div>
+                <div class="float-icon" data-delay="2">📄</div>
+                <div class="float-icon" data-delay="3">🖼️</div>
+                <div class="float-icon" data-delay="4">🎬</div>
+                <div class="float-icon" data-delay="5">📦</div>
+            </div>
+        </div>
+
+        <div class="hero-scroll-indicator">
+            <span>Scroll</span>
+            <div class="scroll-line"></div>
+        </div>
+    </section>
+
+    <!-- ═══════════════ MAIN APP (SEND / RECEIVE) ═══════════════ -->
+    <section class="app-section" id="app">
+        <div class="app-container">
+
+            <div class="app-header">
+                <h2 class="section-title">Send or Receive</h2>
+                <p class="section-subtitle">Choose your action below</p>
+            </div>
+
+            <!-- Tabs -->
+            <div class="tabs" role="tablist">
+                <button class="tab active" data-tab="send" role="tab" aria-selected="true">
+                    <span class="tab-icon">📤</span>
+                    <span>Send</span>
+                </button>
+                <button class="tab" data-tab="receive" role="tab" aria-selected="false">
+                    <span class="tab-icon">📥</span>
+                    <span>Receive</span>
+                </button>
+            </div>
+
+            <div class="transfer-card">
+
+                <!-- ══ SEND PANEL ══ -->
+                <div class="panel active" id="panel-send">
+
+                    <!-- Sub-tabs: File / Text -->
+                    <div class="subtabs">
+                        <button class="subtab active" data-subtab="file">
+                            <span>📎</span> File
+                        </button>
+                        <button class="subtab" data-subtab="text">
+                            <span>📝</span> Text
+                        </button>
+                    </div>
+
+                    <!-- ── File Send ── -->
+                    <div class="subpanel active" id="subpanel-file">
+                        <div class="dropzone" id="dropzone">
+                            <input type="file" id="fileInput" hidden>
+                            <div class="dropzone-content">
+                                <div class="dropzone-icon">⬆️</div>
+                                <div class="dropzone-title">
+                                    Drop your file here or <span class="link">browse</span>
+                                </div>
+                                <div class="dropzone-hint">
+                                    Any file type · Max 100 MB
+                                </div>
+                            </div>
+                            <div class="dropzone-overlay"></div>
+                        </div>
+
+                        <div class="file-preview" id="filePreview" hidden>
+                            <div class="file-preview-icon" id="filePreviewIcon">📄</div>
+                            <div class="file-preview-info">
+                                <div class="file-preview-name" id="filePreviewName">filename.ext</div>
+                                <div class="file-preview-size" id="filePreviewSize">0 MB</div>
+                            </div>
+                            <button class="file-preview-remove" id="fileRemoveBtn" aria-label="Remove">
+                                ✕
+                            </button>
+                        </div>
+
+                        <!-- Progress -->
+                        <div class="progress-wrap" id="uploadProgress" hidden>
+                            <div class="progress-header">
+                                <span class="progress-label">Uploading...</span>
+                                <span class="progress-percent" id="uploadPercent">0%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="uploadProgressFill"></div>
+                            </div>
+                        </div>
+
+                        <button class="btn btn-primary btn-block" id="sendFileBtn" disabled>
+                            <span class="btn-icon">📤</span>
+                            <span class="btn-text">Send File</span>
+                            <span class="btn-spinner" hidden></span>
+                        </button>
+                    </div>
+
+                    <!-- ── Text Send ── -->
+                    <div class="subpanel" id="subpanel-text">
+                        <div class="textarea-wrap">
+                            <textarea id="textInput" class="text-input" placeholder="Paste or type your text here..."
+                                maxlength="500000"></textarea>
+                            <div class="textarea-footer">
+                                <span id="textCharCount">0 characters</span>
+                            </div>
+                        </div>
+
+                        <button class="btn btn-primary btn-block" id="sendTextBtn" disabled>
+                            <span class="btn-icon">📤</span>
+                            <span class="btn-text">Send Text</span>
+                            <span class="btn-spinner" hidden></span>
+                        </button>
+                    </div>
+
+                    <!-- ── Success: Code Display ── -->
+                    <div class="code-display" id="codeDisplay" hidden>
+                        <div class="code-success-icon">✓</div>
+                        <h3 class="code-title">Ready to Share!</h3>
+                        <p class="code-subtitle">Give this code to the receiver</p>
+
+                        <div class="code-box">
+                            <div class="code-value" id="generatedCode">------</div>
+                            <button class="code-copy-btn" id="copyCodeBtn" aria-label="Copy code">
+                                <span class="copy-icon">📋</span>
+                            </button>
+                        </div>
+
+                        <div class="code-meta">
+                            <span class="code-meta-item">
+                                <span class="meta-icon">⏱️</span>
+                                Expires in <span id="codeExpiry">10 min</span>
+                            </span>
+                        </div>
+
+                        <!-- QR Code -->
+                        <div class="qr-section">
+                            <div class="qr-toggle">
+                                <button class="btn btn-ghost btn-sm" id="qrToggleBtn">
+                                    <span>📱</span> Show QR Code
+                                </button>
+                            </div>
+                            <div class="qr-container" id="qrContainer" hidden>
+                                <div id="qrcode"></div>
+                                <p class="qr-hint">Scan with your phone camera</p>
+                            </div>
+                        </div>
+
+                        <!-- Share actions -->
+                        <div class="share-actions">
+                            <button class="btn btn-ghost btn-sm" id="copyLinkBtn">
+                                <span>🔗</span> Copy Link
+                            </button>
+                            <button class="btn btn-ghost btn-sm" id="newTransferBtn">
+                                <span>➕</span> New Transfer
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ══ RECEIVE PANEL ══ -->
+                <div class="panel" id="panel-receive">
+                    <div class="receive-input-wrap">
+                        <label for="codeInput" class="input-label">Enter the secret code</label>
+                        <div class="code-input-group">
+                            <input type="text" id="codeInput" class="code-input" placeholder="000000" maxlength="6"
+                                inputmode="numeric" autocomplete="off" spellcheck="false">
+                            <button class="btn btn-primary" id="receiveBtn">
+                                <span class="btn-text">Receive</span>
+                                <span class="btn-spinner" hidden></span>
+                            </button>
+                        </div>
+                        <div class="input-hint">
+                            6-digit code · Ask the sender if you don't have one
+                        </div>
+                    </div>
+
+                    <div class="receive-error" id="receiveError" hidden></div>
+
+                    <div class="receive-loading" id="receiveLoading" hidden>
+                        <div class="spinner"></div>
+                        <p>Fetching transfer...</p>
+                    </div>
+
+                    <!-- Result -->
+                    <div class="receive-result" id="receiveResult" hidden>
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════════ FEATURES ═══════════════ -->
+    <section class="features" id="features">
+        <div class="section-container">
+            <div class="section-header">
+                <span class="section-tag">Why QuickShare</span>
+                <h2 class="section-title">Everything You Need</h2>
+                <p class="section-subtitle">
+                    Fast, simple, and secure file sharing — without the hassle.
+                </p>
+            </div>
+
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3 class="feature-title">Lightning Fast</h3>
+                    <p class="feature-text">Uploads complete in seconds. No queues, no waiting.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔒</div>
+                    <h3 class="feature-title">Secure Codes</h3>
+                    <p class="feature-text">6-digit unique codes. Only people with the code can access.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📁</div>
+                    <h3 class="feature-title">Any File Type</h3>
+                    <p class="feature-text">Audio, video, documents, images — up to 100 MB.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📝</div>
+                    <h3 class="feature-title">Text Sharing</h3>
+                    <p class="feature-text">Send text, code, or links. Copy with one click.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⏱️</div>
+                    <h3 class="feature-title">Auto Delete</h3>
+                    <p class="feature-text">Files expire after 10 minutes. Your privacy matters.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🚫</div>
+                    <h3 class="feature-title">No Signup</h3>
+                    <p class="feature-text">No accounts, no email, no hassle. Just share.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════════ HOW IT WORKS ═══════════════ -->
+    <section class="steps" id="how-it-works">
+        <div class="section-container">
+            <div class="section-header">
+                <span class="section-tag">Simple Process</span>
+                <h2 class="section-title">How It Works</h2>
+                <p class="section-subtitle">Three easy steps and you're done.</p>
+            </div>
+
+            <div class="steps-grid">
+                <div class="step-card">
+                    <div class="step-number">1</div>
+                    <div class="step-icon">📤</div>
+                    <h3 class="step-title">Upload</h3>
+                    <p class="step-text">Drop your file or paste text in the send tab.</p>
+                </div>
+                <div class="step-connector"></div>
+                <div class="step-card">
+                    <div class="step-number">2</div>
+                    <div class="step-icon">🔑</div>
+                    <h3 class="step-title">Get Code</h3>
+                    <p class="step-text">We generate a unique 6-digit code for you.</p>
+                </div>
+                <div class="step-connector"></div>
+                <div class="step-card">
+                    <div class="step-number">3</div>
+                    <div class="step-icon">🎁</div>
+                    <h3 class="step-title">Share</h3>
+                    <p class="step-text">Give the code to anyone. They receive it instantly.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════════ STATS ═══════════════ -->
+    <section class="stats" id="stats">
+        <div class="section-container">
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-number" id="statActive">0</div>
+                    <div class="stat-label">Active Transfers</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">100<span class="stat-unit">MB</span></div>
+                    <div class="stat-label">Max File Size</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">10<span class="stat-unit">min</span></div>
+                    <div class="stat-label">Auto Expiry</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">100<span class="stat-unit">%</span></div>
+                    <div class="stat-label">Free Forever</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════════ FAQ ═══════════════ -->
+    <section class="faq" id="faq">
+        <div class="section-container">
+            <div class="section-header">
+                <span class="section-tag">Questions</span>
+                <h2 class="section-title">Frequently Asked</h2>
+                <p class="section-subtitle">Everything you might want to know.</p>
+            </div>
+
+            <div class="faq-list">
+                <div class="faq-item">
+                    <button class="faq-question">
+                        <span>Is QuickShare really free?</span>
+                        <span class="faq-icon">+</span>
+                    </button>
+                    <div class="faq-answer">
+                        <p>Yes, 100% free. No hidden charges, no premium plans, no ads.</p>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <button class="faq-question">
+                        <span>What file types are supported?</span>
+                        <span class="faq-icon">+</span>
+                    </button>
+                    <div class="faq-answer">
+                        <p>Any file type — audio, video, documents, images, archives, and more. Up to 100 MB per file.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <button class="faq-question">
+                        <span>How long do files stay available?</span>
+                        <span class="faq-icon">+</span>
+                    </button>
+                    <div class="faq-answer">
+                        <p>Files are automatically deleted after 10 minutes for privacy. Make sure to download before
+                            the timer runs out.</p>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <button class="faq-question">
+                        <span>Do I need to create an account?</span>
+                        <span class="faq-icon">+</span>
+                    </button>
+                    <div class="faq-answer">
+                        <p>No. QuickShare is completely anonymous. Just upload and get a code.</p>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <button class="faq-question">
+                        <span>Is my data secure?</span>
+                        <span class="faq-icon">+</span>
+                    </button>
+                    <div class="faq-answer">
+                        <p>Your data is stored in memory only and auto-deleted after expiry. No one can access without
+                            the secret code.</p>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <button class="faq-question">
+                        <span>Can I share with multiple people?</span>
+                        <span class="faq-icon">+</span>
+                    </button>
+                    <div class="faq-answer">
+                        <p>Yes! Share the same code with anyone. Files can be downloaded multiple times until expiry.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════════ CTA ═══════════════ -->
+    <section class="cta">
+        <div class="section-container">
+            <div class="cta-box">
+                <h2 class="cta-title">Ready to Share Something?</h2>
+                <p class="cta-text">No signup required. Start in 5 seconds.</p>
+                <a href="#app" class="btn btn-primary btn-lg">
+                    <span>Start Sharing</span>
+                    <span class="btn-arrow">→</span>
+                </a>
+            </div>
+        </div>
+    </section>
+
+<!-- ═══════════════ FOOTER ═══════════════ -->
+<footer class="footer">
+    <div class="footer-container">
+        <div class="footer-brand">
+            <div class="footer-logo">
+                <span class="brand-icon">⚡</span>
+                <span class="brand-text">QuickShare</span>
+            </div>
+            <p class="footer-text">
+                Share files instantly. No signup. Just a code.
+            </p>
+        </div>
+
+        <div class="footer-links">
+            <div class="footer-col">
+                <h4>Product</h4>
+                <a href="#features">Features</a>
+                <a href="#how-it-works">How it Works</a>
+                <a href="#faq">FAQ</a>
+            </div>
+            <div class="footer-col">
+                <h4>Legal</h4>
+                <a href="/privacy.html">Privacy</a>
+                <a href="/terms.html">Terms</a>
+                <a href="/cookies.html">Cookies</a>
+            </div>
+            <div class="footer-col">
+                <h4>Connect</h4>
+                <a href="mailto:hello@quickshare.app">Contact</a>
+                <a href="https://github.com" target="_blank" rel="noopener">GitHub</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer-bottom">
+        <p>© 2026 QuickShare. Made with ❤️ for everyone.</p>
+    </div>
+</footer>
+
+<!-- ═══════════════ BACK TO TOP ═══════════════ -->
+<button class="back-to-top" id="backToTop" aria-label="Back to top" title="Back to top">
+    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.4"
+        stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 19V5" />
+        <path d="M5 12l7-7 7 7" />
+    </svg>
+</button>
+
+    <!-- ═══════════════ TOAST CONTAINER ═══════════════ -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- ═══════════════ SCRIPTS ═══════════════ -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/config.js"></script>
+    <script src="/js/utils.js"></script>
+    <script src="/js/theme.js"></script>
+    <script src="/js/socket.js"></script>
+    <script src="/js/router.js"></script>
+    <script src="/js/components/toast.js"></script>
+    <script src="/js/components/progress.js"></script>
+    <script src="/js/components/clipboard.js"></script>
+    <script src="/js/components/dragdrop.js"></script>
+    <script src="/js/components/paste.js"></script>
+    <script src="/js/components/qrcode.js"></script>
+    <script src="/js/components/codeDisplay.js"></script>
+    <script src="/js/components/preview.js"></script>
+    <script src="/js/components/send.js"></script>
+    <script src="/js/components/receive.js"></script>
+    <script src="/js/components/faq.js"></script>
+<script src="/js/components/landing.js"></script>
+    <script src="/js/components/backToTop.js"></script>
+    <script src="/js/main.js"></script>
+</body>
+
+</html>

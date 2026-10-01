@@ -135,79 +135,156 @@ async function downloadFile(req, res) {
 }
 
 /* ═══════════════════════════════════════════════
-   DOWNLOAD ALL AS ZIP — GET /api/download-zip/:code
+   DOWNLOAD ALL AS ZIP
+   ⚠️ NON-ASYNC — streaming must be synchronous
    ═══════════════════════════════════════════════ */
-async function downloadZip(req, res) {
+function downloadZip(req, res, next) {
   const { code } = req.params;
-  const transfer = storage.getTransfer(code);
+
+  console.log('\n═══════════════════════════════');
+  console.log('[ZIP] ▶ Request received for code:', code);
+
+  // ── Get transfer ──
+  let transfer;
+  try {
+    transfer = storage.getTransfer(code);
+  } catch (err) {
+    console.error('[ZIP] ✗ storage.getTransfer() threw:', err);
+    return next(err);
+  }
+
+  console.log('[ZIP] ✓ Transfer found:', !!transfer);
 
   if (!transfer) {
-    throw new AppError('Code not found or expired', 404, 'NOT_FOUND');
+    console.log('[ZIP] ✗ Not found → 404');
+    return res.status(404).json({
+      success: false,
+      error: 'Code not found or expired',
+      code: 'NOT_FOUND'
+    });
   }
+
+  console.log('[ZIP]   type:', transfer.type);
 
   if (transfer.type === 'text') {
-    throw new AppError(
-      'Cannot create ZIP for text transfer',
-      400,
-      'NOT_A_FILE'
-    );
+    console.log('[ZIP] ✗ Text transfer → 400');
+    return res.status(400).json({
+      success: false,
+      error: 'Cannot create ZIP for text transfer',
+      code: 'NOT_A_FILE'
+    });
   }
 
-  // Legacy single file — redirect to normal download
   if (transfer.type === 'file') {
+    console.log('[ZIP] → Redirecting legacy single file');
     return res.redirect(`/api/download/${code}/default`);
   }
 
   if (transfer.type !== 'files') {
-    throw new AppError('Unsupported transfer type', 400, 'UNSUPPORTED');
+    console.log('[ZIP] ✗ Unsupported type:', transfer.type);
+    return res.status(400).json({
+      success: false,
+      error: 'Unsupported transfer type',
+      code: 'UNSUPPORTED'
+    });
   }
 
-  // ZIP filename
+  console.log('[ZIP]   fileCount:', transfer.fileCount);
+  console.log('[ZIP]   totalSize:', transfer.totalSize);
+
+  // ── Set headers ──
   const zipName = `QuickShare_${code}.zip`;
 
-  // Headers
-  res.setHeader('Content-Type', 'application/zip');
-  res.setHeader('Content-Disposition', `attachment; filename="${zipName}"`);
-  res.setHeader('Cache-Control', 'no-store');
+  try {
+    res.setHeader('Content-Type', 'application/zip');
+    res.setHeader('Content-Disposition', `attachment; filename="${zipName}"`);
+    res.setHeader('Cache-Control', 'no-store');
+    res.setHeader('X-Accel-Buffering', 'no');
+    console.log('[ZIP] ✓ Headers set');
+  } catch (err) {
+    console.error('[ZIP] ✗ setHeader threw:', err);
+    return next(err);
+  }
 
-  // Create archiver
-  const archive = archiver('zip', {
-    zlib: { level: 6 } // compression level (0-9; 6 = balanced)
-  });
+  // ── Create archiver ──
+  let archive;
+  try {
+    archive = archiver('zip', { zlib: { level: 1 } });
+    console.log('[ZIP] ✓ Archiver created');
+  } catch (err) {
+    console.error('[ZIP] ✗ archiver() threw:', err);
+    return res.status(500).json({
+      success: false,
+      error: 'Failed to initialize archiver',
+      code: 'ARCHIVER_INIT_ERROR'
+    });
+  }
 
-  // Error handling
-  archive.on('warning', err => {
-    if (err.code === 'ENOENT') {
-      logger.warn(`ZIP warning: ${err.message}`);
-    } else {
-      throw err;
-    }
-  });
-
+  // ── Error handlers ──
   archive.on('error', err => {
-    logger.error(`ZIP error: ${err.message}`);
+    console.error('[ZIP] ✗ ARCHIVE ERROR:', err.message, err);
+    logger.error(`ZIP error for ${code}: ${err.message}`);
     if (!res.headersSent) {
       res.status(500).json({
         success: false,
         error: 'Failed to create ZIP',
         code: 'ZIP_ERROR'
       });
+    } else {
+      try {
+        res.destroy();
+      } catch (e) {}
     }
   });
 
-  // Pipe archive to response
-  archive.pipe(res);
+  archive.on('warning', err => {
+    console.warn('[ZIP] ⚠ WARNING:', err.message);
+    logger.warn(`ZIP warning for ${code}: ${err.message}`);
+  });
 
-  // Add files in order
+  archive.on('progress', data => {
+    console.log(
+      `[ZIP]   progress: ${data.entries.processed}/${data.entries.total} entries`
+    );
+  });
+
+  archive.on('end', () => {
+    console.log('[ZIP] ✓ Archive stream ENDED');
+  });
+
+  archive.on('close', () => {
+    console.log('[ZIP] ✓ Archive stream CLOSED');
+  });
+
+  // ── Client abort ──
+  req.on('close', () => {
+    if (!res.writableEnded) {
+      console.log('[ZIP] ⚠ Client closed — aborting');
+      try {
+        archive.abort();
+      } catch (e) {}
+    }
+  });
+
+  // ── Pipe ──
+  try {
+    archive.pipe(res);
+    console.log('[ZIP] ✓ Piped to response');
+  } catch (err) {
+    console.error('[ZIP] ✗ pipe() threw:', err);
+    return next(err);
+  }
+
+  // ── Append files ──
   const sorted = [...transfer.files].sort((a, b) => a.order - b.order);
-
-  // Handle duplicate names in ZIP (rare, but safe)
   const usedNames = new Set();
+
+  console.log('[ZIP] Appending files...');
 
   for (const file of sorted) {
     let filename = file.filename;
 
-    // If duplicate, add suffix
+    // Duplicate name handling
     let counter = 1;
     const original = filename;
     while (usedNames.has(filename)) {
@@ -221,18 +298,41 @@ async function downloadZip(req, res) {
     }
     usedNames.add(filename);
 
-    archive.append(file.data, { name: filename });
+    try {
+      if (!file.data) {
+        console.warn('[ZIP] ⚠ Skipping — no data:', filename);
+        continue;
+      }
+      if (!Buffer.isBuffer(file.data)) {
+        console.warn('[ZIP] ⚠ Not a buffer:', filename, typeof file.data);
+      }
+
+      archive.append(file.data, { name: filename });
+      console.log(`[ZIP]   ✓ Added: ${filename} (${file.size} bytes)`);
+    } catch (err) {
+      console.error(`[ZIP] ✗ Failed to append ${filename}:`, err.message);
+    }
   }
 
-  // Finalize
-  await archive.finalize();
+  // ── Finalize ──
+  console.log('[ZIP] Finalizing...');
+  try {
+    archive.finalize();
+    console.log('[ZIP] ✓ finalize() called');
+  } catch (err) {
+    console.error('[ZIP] ✗ finalize() threw:', err);
+  }
 
-  // Download count
-  storage.incrementDownload(code);
+  // ── Count + log ──
+  try {
+    storage.incrementDownload(code);
+  } catch (e) {}
 
   logger.download(
     `${code} — ZIP (${transfer.fileCount} files, ${formatSize(transfer.totalSize)})`
   );
+
+  console.log('[ZIP] ◀ Handler returned\n═══════════════════════════════\n');
 }
 
 /* ═══════════════════════════════════════════════

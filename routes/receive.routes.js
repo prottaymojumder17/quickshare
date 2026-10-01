@@ -21,23 +21,18 @@ router.get('/stats', asyncHandler(getStats));
 /* ── Info ── */
 router.get('/info/:code', receiveLimiter, validateCode, asyncHandler(getInfo));
 
-/* ── Download single file ──
-   /api/download/:code           → default
-   /api/download/:code/:fileId   → specific
+/* ── Download All as ZIP ──
+   ⚠️ MUST come BEFORE /download/:code route
+   ⚠️ MUST NOT use asyncHandler — streaming is synchronous
 */
+router.get('/download-zip/:code', receiveLimiter, validateCode, downloadZip);
+
+/* ── Download single file ── */
 router.get(
   '/download/:code/:fileId?',
   receiveLimiter,
   validateCode,
   asyncHandler(downloadFile)
-);
-
-/* ── Download All as ZIP ── */
-router.get(
-  '/download-zip/:code',
-  receiveLimiter,
-  validateCode,
-  asyncHandler(downloadZip)
 );
 
 /* ── Preview ── */

@@ -1,6 +1,7 @@
 // controllers/receive.controller.js
-// Multi-file + single-file receive/download/preview
+// Multi-file + single-file receive/download/preview + ZIP
 
+const archiver = require('archiver');
 const storage = require('../services/storage.service');
 const { formatSize } = require('../utils/formatSize');
 const { getFileCategory, isPreviewable } = require('../utils/mimeHelper');
@@ -90,9 +91,6 @@ async function getInfo(req, res) {
 
 /* ═══════════════════════════════════════════════
    DOWNLOAD — GET /api/download/:code/:fileId?
-   Single file: /api/download/:code/default
-   Multi-file:  /api/download/:code/:fileId
-   Legacy:      /api/download/:code (auto default)
    ═══════════════════════════════════════════════ */
 async function downloadFile(req, res) {
   const { code } = req.params;
@@ -103,12 +101,10 @@ async function downloadFile(req, res) {
     throw new AppError('Code not found or expired', 404, 'NOT_FOUND');
   }
 
-  // Text cannot be "downloaded" as file
   if (transfer.type === 'text') {
     throw new AppError('This code is for text, not file', 400, 'NOT_A_FILE');
   }
 
-  // Find the file
   const file = storage.getFileFromTransfer(code, fileId);
   if (!file) {
     throw new AppError(
@@ -118,7 +114,6 @@ async function downloadFile(req, res) {
     );
   }
 
-  // Download counters
   if (transfer.type === 'files') {
     storage.incrementFileDownload(code, fileId);
   } else {
@@ -137,6 +132,107 @@ async function downloadFile(req, res) {
   );
 
   res.send(file.data);
+}
+
+/* ═══════════════════════════════════════════════
+   DOWNLOAD ALL AS ZIP — GET /api/download-zip/:code
+   ═══════════════════════════════════════════════ */
+async function downloadZip(req, res) {
+  const { code } = req.params;
+  const transfer = storage.getTransfer(code);
+
+  if (!transfer) {
+    throw new AppError('Code not found or expired', 404, 'NOT_FOUND');
+  }
+
+  if (transfer.type === 'text') {
+    throw new AppError(
+      'Cannot create ZIP for text transfer',
+      400,
+      'NOT_A_FILE'
+    );
+  }
+
+  // Legacy single file — redirect to normal download
+  if (transfer.type === 'file') {
+    return res.redirect(`/api/download/${code}/default`);
+  }
+
+  if (transfer.type !== 'files') {
+    throw new AppError('Unsupported transfer type', 400, 'UNSUPPORTED');
+  }
+
+  // ZIP filename
+  const zipName = `QuickShare_${code}.zip`;
+
+  // Headers
+  res.setHeader('Content-Type', 'application/zip');
+  res.setHeader('Content-Disposition', `attachment; filename="${zipName}"`);
+  res.setHeader('Cache-Control', 'no-store');
+
+  // Create archiver
+  const archive = archiver('zip', {
+    zlib: { level: 6 } // compression level (0-9; 6 = balanced)
+  });
+
+  // Error handling
+  archive.on('warning', err => {
+    if (err.code === 'ENOENT') {
+      logger.warn(`ZIP warning: ${err.message}`);
+    } else {
+      throw err;
+    }
+  });
+
+  archive.on('error', err => {
+    logger.error(`ZIP error: ${err.message}`);
+    if (!res.headersSent) {
+      res.status(500).json({
+        success: false,
+        error: 'Failed to create ZIP',
+        code: 'ZIP_ERROR'
+      });
+    }
+  });
+
+  // Pipe archive to response
+  archive.pipe(res);
+
+  // Add files in order
+  const sorted = [...transfer.files].sort((a, b) => a.order - b.order);
+
+  // Handle duplicate names in ZIP (rare, but safe)
+  const usedNames = new Set();
+
+  for (const file of sorted) {
+    let filename = file.filename;
+
+    // If duplicate, add suffix
+    let counter = 1;
+    const original = filename;
+    while (usedNames.has(filename)) {
+      const dotIdx = original.lastIndexOf('.');
+      if (dotIdx > 0) {
+        filename = `${original.substring(0, dotIdx)}(${counter})${original.substring(dotIdx)}`;
+      } else {
+        filename = `${original}(${counter})`;
+      }
+      counter++;
+    }
+    usedNames.add(filename);
+
+    archive.append(file.data, { name: filename });
+  }
+
+  // Finalize
+  await archive.finalize();
+
+  // Download count
+  storage.incrementDownload(code);
+
+  logger.download(
+    `${code} — ZIP (${transfer.fileCount} files, ${formatSize(transfer.totalSize)})`
+  );
 }
 
 /* ═══════════════════════════════════════════════
@@ -182,6 +278,7 @@ async function getStats(req, res) {
 module.exports = {
   getInfo,
   downloadFile,
+  downloadZip,
   previewFile,
   getStats
 };

@@ -1,5 +1,5 @@
 // routes/receive.routes.js
-// Receive endpoints — info, download, preview, stats
+// Receive endpoints — info, download, preview, stats, ZIP
 
 const express = require('express');
 const router = express.Router();
@@ -7,6 +7,7 @@ const router = express.Router();
 const {
   getInfo,
   downloadFile,
+  downloadZip,
   previewFile,
   getStats
 } = require('../controllers/receive.controller');
@@ -20,11 +21,9 @@ router.get('/stats', asyncHandler(getStats));
 /* ── Info ── */
 router.get('/info/:code', receiveLimiter, validateCode, asyncHandler(getInfo));
 
-/* ── Download ──
-   Supports:
-     /api/download/:code           → single file (default)
-     /api/download/:code/default   → single file explicit
-     /api/download/:code/:fileId   → multi-file specific
+/* ── Download single file ──
+   /api/download/:code           → default
+   /api/download/:code/:fileId   → specific
 */
 router.get(
   '/download/:code/:fileId?',
@@ -33,7 +32,15 @@ router.get(
   asyncHandler(downloadFile)
 );
 
-/* ── Preview ── (same pattern) */
+/* ── Download All as ZIP ── */
+router.get(
+  '/download-zip/:code',
+  receiveLimiter,
+  validateCode,
+  asyncHandler(downloadZip)
+);
+
+/* ── Preview ── */
 router.get(
   '/preview/:code/:fileId?',
   receiveLimiter,

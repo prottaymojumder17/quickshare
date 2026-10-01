@@ -21,12 +21,12 @@
 
 ## 🛠️ Tech Stack
 
-| Layer | Technology |
-|-------|-----------|
-| Frontend | HTML5, CSS3, Vanilla JS |
-| Backend | Node.js, Express |
-| Realtime | Socket.io |
-| Upload | Multer (in-memory) |
+| Layer    | Technology                  |
+| -------- | --------------------------- |
+| Frontend | HTML5, CSS3, Vanilla JS     |
+| Backend  | Node.js, Express            |
+| Realtime | Socket.io                   |
+| Upload   | Multer (in-memory)          |
 | Security | Helmet, CORS, Rate limiting |
 
 ## 📋 Requirements
@@ -38,7 +38,7 @@
 
 ```bash
 # Clone repo
-git clone https://github.com/yourusername/quickshare.git
+git clone https://github.com/prottaymojumder17/quickshare/yourusername/quickshare.git
 cd quickshare
 
 # Install dependencies
@@ -79,15 +79,15 @@ quickshare/
 
 ## 🔌 API Endpoints
 
-| Method | Route | Description |
-|--------|-------|-------------|
-| POST | `/api/upload` | Upload file → returns code |
-| POST | `/api/text` | Upload text → returns code |
-| GET | `/api/info/:code` | Get transfer info |
-| GET | `/api/download/:code` | Download file |
-| GET | `/api/preview/:code` | Inline preview |
-| GET | `/api/stats` | Public stats |
-| GET | `/api/health` | Health check |
+| Method | Route                 | Description                |
+| ------ | --------------------- | -------------------------- |
+| POST   | `/api/upload`         | Upload file → returns code |
+| POST   | `/api/text`           | Upload text → returns code |
+| GET    | `/api/info/:code`     | Get transfer info          |
+| GET    | `/api/download/:code` | Download file              |
+| GET    | `/api/preview/:code`  | Inline preview             |
+| GET    | `/api/stats`          | Public stats               |
+| GET    | `/api/health`         | Health check               |
 
 ## ⚙️ Environment Variables
 

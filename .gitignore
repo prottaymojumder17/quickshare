@@ -26,3 +26,7 @@ Thumbs.db
 # Build
 dist/
 build/
+
+# Test/temp files
+*.zip
+test*.txt

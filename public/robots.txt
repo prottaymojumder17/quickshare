@@ -2,4 +2,15 @@ User-agent: *
 Allow: /
 Disallow: /api/
 
-Sitemap: https://quickshare.app/sitemap.xml
+# Sitemap
+Sitemap: https://quickshare-bayp.onrender.com/sitemap.xml
+
+# Crawl delay
+Crawl-delay: 1
+
+# Specific bots
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /

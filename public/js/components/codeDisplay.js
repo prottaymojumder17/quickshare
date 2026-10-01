@@ -1,10 +1,11 @@
 // public/js/components/codeDisplay.js
 // Show code + expiry countdown + QR + share actions
+// Supports: text, single file, multi-file
 
 (function () {
   'use strict';
   const QS = window.QS;
-  const { $, formatDuration, emit } = QS.utils;
+  const { $, formatDuration, formatSize, emit } = QS.utils;
 
   let countdownTimer = null;
   let currentCode = null;
@@ -14,8 +15,16 @@
   const codeDisplay = {
     /**
      * Show the code display section with data
+     *
+     * @param {Object} data
+     * @param {string} data.code
+     * @param {string} data.shareUrl
+     * @param {number} data.expiresAt
+     * @param {string} data.type — 'text' | 'file' | 'files'
+     * @param {number} [data.fileCount] — multi-file হলে
+     * @param {number} [data.totalSize] — multi-file total
      */
-    show({ code, shareUrl, expiresAt, type }) {
+    show({ code, shareUrl, expiresAt, type, fileCount, totalSize }) {
       currentCode = code;
       currentShareUrl = shareUrl;
       currentExpiresAt = expiresAt;
@@ -25,6 +34,9 @@
 
       if (codeEl) codeEl.textContent = code;
       if (box) box.hidden = false;
+
+      // Update title based on type
+      this.updateTitle(type, fileCount);
 
       // Scroll into view
       setTimeout(
@@ -36,13 +48,49 @@
       this.startCountdown();
 
       // Success toast
+      this.showSuccessToast(type, fileCount, code);
+
+      // Emit event
+      emit('qs:code-generated', { code, shareUrl, type, fileCount });
+    },
+
+    /**
+     * Update the title text in code display box
+     */
+    updateTitle(type, fileCount) {
+      const titleEl = $('.code-title');
+      const subtitleEl = $('.code-subtitle');
+
+      if (type === 'text') {
+        if (titleEl) titleEl.textContent = 'Text Ready!';
+        if (subtitleEl)
+          subtitleEl.textContent = 'Give this code to the receiver';
+      } else if (type === 'files' || (fileCount && fileCount > 1)) {
+        if (titleEl) titleEl.textContent = `${fileCount} Files Ready!`;
+        if (subtitleEl)
+          subtitleEl.textContent =
+            'Share this code — receiver can download all files';
+      } else {
+        if (titleEl) titleEl.textContent = 'File Ready!';
+        if (subtitleEl)
+          subtitleEl.textContent = 'Give this code to the receiver';
+      }
+    },
+
+    /**
+     * Show success toast
+     */
+    showSuccessToast(type, fileCount, code) {
+      let title = 'Uploaded!';
+      if (type === 'text') title = 'Text sent!';
+      else if (fileCount > 1) title = `${fileCount} files uploaded!`;
+      else if (type === 'file' || type === 'files') title = 'File uploaded!';
+
       QS.toast.success(
-        type === 'text' ? 'Text sent!' : 'File uploaded!',
+        title,
         `Code: ${code} — share it with the receiver`,
         5000
       );
-
-      emit('qs:code-generated', { code, shareUrl, type });
     },
 
     hide() {

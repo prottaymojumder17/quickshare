@@ -183,8 +183,11 @@
 
                     <!-- ── File Send ── -->
                     <div class="subpanel active" id="subpanel-file">
+
+                        <!-- Hidden file input (single instance, multi-select) -->
+                        <input type="file" id="fileInput" hidden multiple>
+
                         <div class="dropzone" id="dropzone">
-                            <input type="file" id="fileInput" hidden multiple>
                             <div class="dropzone-content">
                                 <div class="dropzone-icon">⬆️</div>
                                 <div class="dropzone-title">
@@ -202,7 +205,7 @@
                             <div class="file-list-header">
                                 <div class="file-list-title">
                                     <span>📁</span>
-                                    <span id="fileListCount">0</span>
+                                    <span class="file-list-count" id="fileListCount">0</span>
                                     <span>file(s)</span>
                                     <span class="file-list-size" id="fileListSize">0 B</span>
                                 </div>
@@ -576,57 +579,57 @@
         </svg>
     </button>
 
-<!-- ═══════════════ PREVIEW MODAL ═══════════════ -->
-<div class="preview-modal" id="previewModal" role="dialog" aria-modal="true" aria-hidden="true">
-    <div class="preview-modal-card">
+    <!-- ═══════════════ PREVIEW MODAL ═══════════════ -->
+    <div class="preview-modal" id="previewModal" role="dialog" aria-modal="true" aria-hidden="true">
+        <div class="preview-modal-card">
 
-        <!-- Header -->
-        <div class="preview-modal-header">
-            <div class="preview-modal-title">
-                <div class="preview-modal-icon" id="previewModalIcon">📄</div>
-                <div class="preview-modal-info">
-                    <div class="preview-modal-name" id="previewModalName">filename</div>
-                    <div class="preview-modal-meta" id="previewModalMeta"></div>
+            <!-- Header -->
+            <div class="preview-modal-header">
+                <div class="preview-modal-title">
+                    <div class="preview-modal-icon" id="previewModalIcon">📄</div>
+                    <div class="preview-modal-info">
+                        <div class="preview-modal-name" id="previewModalName">filename</div>
+                        <div class="preview-modal-meta" id="previewModalMeta"></div>
+                    </div>
+                </div>
+                <div class="preview-modal-actions">
+                    <button type="button" class="preview-modal-btn" id="previewModalDownloadBtn" title="Download"
+                        aria-label="Download">
+                        <span>⬇️</span>
+                    </button>
+                    <button type="button" class="preview-modal-btn close-btn" id="previewModalCloseBtn"
+                        title="Close (Esc)" aria-label="Close">
+                        <span>✕</span>
+                    </button>
                 </div>
             </div>
-            <div class="preview-modal-actions">
-                <button type="button" class="preview-modal-btn" id="previewModalDownloadBtn" title="Download"
-                    aria-label="Download">
-                    <span>⬇️</span>
+
+            <!-- Body -->
+            <div class="preview-modal-body" id="previewModalBody">
+                <!-- Populated by JS -->
+            </div>
+
+            <!-- Float nav arrows -->
+            <button type="button" class="preview-float-nav prev" id="previewFloatPrev" aria-label="Previous">
+                <span>‹</span>
+            </button>
+            <button type="button" class="preview-float-nav next" id="previewFloatNext" aria-label="Next">
+                <span>›</span>
+            </button>
+
+            <!-- Bottom navigation -->
+            <div class="preview-modal-nav hidden" id="previewModalNav">
+                <button type="button" class="preview-nav-btn" id="previewNavPrev">
+                    <span>←</span> Prev
                 </button>
-                <button type="button" class="preview-modal-btn close-btn" id="previewModalCloseBtn" title="Close (Esc)"
-                    aria-label="Close">
-                    <span>✕</span>
+                <span class="preview-nav-counter" id="previewNavCounter">1 / 1</span>
+                <button type="button" class="preview-nav-btn" id="previewNavNext">
+                    Next <span>→</span>
                 </button>
             </div>
+
         </div>
-
-        <!-- Body -->
-        <div class="preview-modal-body" id="previewModalBody">
-            <!-- Populated by JS -->
-        </div>
-
-        <!-- Float nav arrows -->
-        <button type="button" class="preview-float-nav prev" id="previewFloatPrev" aria-label="Previous">
-            <span>‹</span>
-        </button>
-        <button type="button" class="preview-float-nav next" id="previewFloatNext" aria-label="Next">
-            <span>›</span>
-        </button>
-
-        <!-- Bottom navigation -->
-        <div class="preview-modal-nav hidden" id="previewModalNav">
-            <button type="button" class="preview-nav-btn" id="previewNavPrev">
-                <span>←</span> Prev
-            </button>
-            <span class="preview-nav-counter" id="previewNavCounter">1 / 1</span>
-            <button type="button" class="preview-nav-btn" id="previewNavNext">
-                Next <span>→</span>
-            </button>
-        </div>
-
     </div>
-</div>
 
     <!-- ═══════════════ TOAST CONTAINER ═══════════════ -->
     <div class="toast-container" id="toastContainer"></div>

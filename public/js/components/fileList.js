@@ -1,5 +1,5 @@
 // public/js/components/fileList.js
-// Multi-file list UI manager
+// Multi-file list with drag-reorder (mouse + touch)
 
 (function () {
   'use strict';
@@ -13,6 +13,20 @@
     els: {},
     files: [], // { id, file, name, size, type }
     fileCounter: 0,
+
+    // Drag state
+    dragState: {
+      active: false,
+      fromId: null,
+      fromIndex: -1,
+      targetId: null,
+      position: null, // 'top' | 'bottom'
+      pointerId: null,
+      ghost: null, // floating preview element
+      offsetY: 0,
+      startY: 0,
+      listRect: null
+    },
 
     /* ═══════════════════════════════════════════════
        Init
@@ -41,7 +55,7 @@
     },
 
     /* ═══════════════════════════════════════════════
-      Events
+       Events
        ═══════════════════════════════════════════════ */
     bindEvents() {
       // Clear all
@@ -57,140 +71,267 @@
         this.els.fileInput?.click();
       });
 
-      // Listen to file selection from dragdrop
+      // Listen to file selection
       QS.utils.on('qs:files-selected', e => {
         this.addFiles(e.detail.files);
       });
 
-      // Listen to file removal request
-      QS.utils.on('qs:file-remove', e => {
-        this.removeFile(e.detail.id);
-      });
-
-      // Listen to reset
+      // Reset
       QS.utils.on('qs:new-transfer', () => this.clear());
     },
 
     /* ═══════════════════════════════════════════════
-       Drag & Drop Reordering
+       DRAG & DROP — Mouse + Touch
        ═══════════════════════════════════════════════ */
+
     initDragDrop() {
       const container = this.els.items;
       if (!container) return;
 
-      let draggedEl = null;
-      let draggedId = null;
+      // Only bind pointer drag from handle
+      container.addEventListener('pointerdown', e => {
+        const handle = e.target.closest('.file-row-drag');
+        if (!handle) return;
 
-      // ── Drag start ──
-      container.addEventListener('dragstart', e => {
-        const row = e.target.closest('.file-row');
+        const row = handle.closest('.file-row');
         if (!row) return;
 
-        // Only allow drag from handle (or the row itself on touch)
-        draggedEl = row;
-        draggedId = row.dataset.id;
+        // Only allow reorder if multiple files
+        if (this.files.length < 2) return;
 
-        row.classList.add('dragging');
-        container.classList.add('dragging-active');
-
-        try {
-          e.dataTransfer.effectAllowed = 'move';
-          e.dataTransfer.setData('text/plain', draggedId);
-        } catch (err) {
-          // Some browsers require this
-        }
-      });
-
-      // ── Drag over ──
-      container.addEventListener('dragover', e => {
-        e.preventDefault();
-        if (!draggedEl) return;
-
-        const target = e.target.closest('.file-row');
-        if (!target || target === draggedEl) return;
-
-        e.dataTransfer.dropEffect = 'move';
-
-        // Clear previous indicators
-        container
-          .querySelectorAll('.drag-over-top, .drag-over-bottom')
-          .forEach(el => {
-            el.classList.remove('drag-over-top', 'drag-over-bottom');
-          });
-
-        // Determine drop position
-        const rect = target.getBoundingClientRect();
-        const midY = rect.top + rect.height / 2;
-        const isTop = e.clientY < midY;
-
-        target.classList.add(isTop ? 'drag-over-top' : 'drag-over-bottom');
-      });
-
-      // ── Drag leave ──
-      container.addEventListener('dragleave', e => {
-        const target = e.target.closest('.file-row');
-        if (target) {
-          target.classList.remove('drag-over-top', 'drag-over-bottom');
-        }
-      });
-
-      // ── Drop ──
-      container.addEventListener('drop', e => {
         e.preventDefault();
 
-        if (!draggedId) return;
-
-        const target = e.target.closest('.file-row');
-        if (!target || target === draggedEl) {
-          this.cleanupDragState();
-          return;
-        }
-
-        const targetId = target.dataset.id;
-        const rect = target.getBoundingClientRect();
-        const midY = rect.top + rect.height / 2;
-        const isTop = e.clientY < midY;
-
-        this.reorderFiles(draggedId, targetId, isTop);
-        this.cleanupDragState();
+        this.startDrag(e, row);
       });
 
-      // ── Drag end ──
-      container.addEventListener('dragend', () => {
-        this.cleanupDragState();
-      });
+      // Global listeners
+      document.addEventListener('pointermove', e => this.onDragMove(e));
+      document.addEventListener('pointerup', e => this.onDragEnd(e));
+      document.addEventListener('pointercancel', e => this.onDragEnd(e));
 
-      // ── Make rows draggable ──
-      // We make ALL rows draggable, but only show handle for multi-file
-      const observer = new MutationObserver(() => {
-        this.makeRowsDraggable();
-      });
-      observer.observe(container, { childList: true });
-
-      // Initial
-      this.makeRowsDraggable();
+      // Keyboard reorder (accessibility)
+      container.addEventListener('keydown', e => this.onKeyReorder(e));
     },
 
-    makeRowsDraggable() {
-      if (!this.els.items) return;
-      const rows = this.els.items.querySelectorAll('.file-row');
-      rows.forEach(row => {
-        row.draggable = true;
+    startDrag(e, row) {
+      const id = row.dataset.id;
+      const index = this.files.findIndex(f => f.id === id);
+      if (index === -1) return;
+
+      // Setup drag state
+      this.dragState.active = true;
+      this.dragState.fromId = id;
+      this.dragState.fromIndex = index;
+      this.dragState.pointerId = e.pointerId;
+      this.dragState.startY = e.clientY;
+      this.dragState.listRect = this.els.items.getBoundingClientRect();
+
+      // Row rect
+      const rowRect = row.getBoundingClientRect();
+      this.dragState.offsetY = e.clientY - rowRect.top;
+
+      // Style row as dragging
+      row.classList.add('dragging');
+
+      // Make pointer capture
+      try {
+        row.setPointerCapture(e.pointerId);
+      } catch (err) {}
+
+      // Create ghost element
+      this.createGhost(row, rowRect);
+
+      // Add dragging-active class
+      this.els.items.classList.add('dragging-active');
+
+      // Prevent text selection
+      document.body.style.userSelect = 'none';
+      document.body.style.cursor = 'grabbing';
+    },
+
+    createGhost(row, rect) {
+      const ghost = row.cloneNode(true);
+      ghost.classList.add('drag-ghost');
+      ghost.style.position = 'fixed';
+      ghost.style.left = rect.left + 'px';
+      ghost.style.top = rect.top + 'px';
+      ghost.style.width = rect.width + 'px';
+      ghost.style.height = rect.height + 'px';
+      ghost.style.pointerEvents = 'none';
+      ghost.style.zIndex = '99999';
+      ghost.style.opacity = '0.9';
+      ghost.style.transform = 'scale(1.02)';
+      ghost.style.boxShadow = '0 12px 40px rgba(0,0,0,0.5)';
+
+      document.body.appendChild(ghost);
+      this.dragState.ghost = ghost;
+    },
+
+    onDragMove(e) {
+      if (!this.dragState.active) return;
+      if (e.pointerId !== this.dragState.pointerId) return;
+
+      e.preventDefault();
+
+      const ghost = this.dragState.ghost;
+      if (!ghost) return;
+
+      // Move ghost
+      const newTop = e.clientY - this.dragState.offsetY;
+      ghost.style.top = newTop + 'px';
+
+      // Determine drop target
+      const rows = Array.from(
+        this.els.items.querySelectorAll('.file-row:not(.dragging)')
+      );
+      let target = null;
+      let position = null;
+
+      for (const row of rows) {
+        const rect = row.getBoundingClientRect();
+        const midY = rect.top + rect.height / 2;
+
+        if (e.clientY >= rect.top && e.clientY <= rect.bottom) {
+          target = row;
+          position = e.clientY < midY ? 'top' : 'bottom';
+          break;
+        }
+
+        // If pointer is above all rows
+        if (e.clientY < rect.top && !target) {
+          target = row;
+          position = 'top';
+        }
+      }
+
+      // Clear previous indicators
+      this.els.items.querySelectorAll('.file-row').forEach(r => {
+        r.classList.remove('drag-over-top', 'drag-over-bottom');
       });
+
+      // Apply new indicator
+      if (target) {
+        target.classList.add(
+          position === 'top' ? 'drag-over-top' : 'drag-over-bottom'
+        );
+        this.dragState.targetId = target.dataset.id;
+        this.dragState.position = position;
+      } else {
+        this.dragState.targetId = null;
+        this.dragState.position = null;
+      }
+
+      // Auto-scroll list if near top/bottom
+      this.maybeAutoScroll(e.clientY);
+    },
+
+    maybeAutoScroll(clientY) {
+      const container = this.els.items;
+      if (!container) return;
+
+      const rect = container.getBoundingClientRect();
+      const threshold = 40;
+      const speed = 8;
+
+      if (clientY < rect.top + threshold) {
+        container.scrollTop -= speed;
+      } else if (clientY > rect.bottom - threshold) {
+        container.scrollTop += speed;
+      }
+    },
+
+    onDragEnd(e) {
+      if (!this.dragState.active) return;
+
+      const { fromId, targetId, position, ghost, pointerId } = this.dragState;
+
+      // Cleanup ghost
+      if (ghost && ghost.parentNode) ghost.remove();
+
+      // Reorder if target exists
+      if (targetId && fromId !== targetId) {
+        this.reorderFiles(fromId, targetId, position === 'top');
+      }
+
+      // Reset state
+      this.cleanupDragState();
     },
 
     cleanupDragState() {
       const container = this.els.items;
-      if (!container) return;
+      if (container) {
+        container.classList.remove('dragging-active');
+        container.querySelectorAll('.file-row').forEach(row => {
+          row.classList.remove('dragging', 'drag-over-top', 'drag-over-bottom');
+        });
+      }
 
-      container.classList.remove('dragging-active');
-      container.querySelectorAll('.file-row').forEach(row => {
-        row.classList.remove('dragging', 'drag-over-top', 'drag-over-bottom');
-      });
+      if (this.dragState.ghost && this.dragState.ghost.parentNode) {
+        this.dragState.ghost.remove();
+      }
+
+      document.body.style.userSelect = '';
+      document.body.style.cursor = '';
+
+      this.dragState = {
+        active: false,
+        fromId: null,
+        fromIndex: -1,
+        targetId: null,
+        position: null,
+        pointerId: null,
+        ghost: null,
+        offsetY: 0,
+        startY: 0,
+        listRect: null
+      };
+    },
+
+    /* ═══════════════════════════════════════════════
+       Keyboard reorder (accessibility)
+       - Space/Enter on handle → select for move
+       - Arrow Up/Down → move
+       - Escape → cancel
+       ═══════════════════════════════════════════════ */
+    onKeyReorder(e) {
+      const handle = e.target.closest('.file-row-drag');
+      if (!handle) return;
+
+      const row = handle.closest('.file-row');
+      if (!row) return;
+
+      const id = row.dataset.id;
+      const index = this.files.findIndex(f => f.id === id);
+      if (index === -1) return;
+
+      if (e.key === 'ArrowUp' && index > 0) {
+        e.preventDefault();
+        this.moveFile(index, index - 1);
+      } else if (e.key === 'ArrowDown' && index < this.files.length - 1) {
+        e.preventDefault();
+        this.moveFile(index, index + 1);
+      }
     },
 
     /**
-     * Drag করে files reorder করে
+     * Move file from one index to another (used by keyboard)
+     */
+    moveFile(fromIndex, toIndex) {
+      if (fromIndex === toIndex) return;
+      const [moved] = this.files.splice(fromIndex, 1);
+      this.files.splice(toIndex, 0, moved);
+      this.render();
+      this.updateUI();
+      this.emitChange();
+      QS.toast.info(
+        'Moved',
+        `"${moved.name}" to position ${toIndex + 1}`,
+        1200
+      );
+    },
+
+    /**
+     * Reorder — drag-based
      */
     reorderFiles(fromId, toId, insertBefore) {
       const fromIdx = this.files.findIndex(f => f.id === fromId);
@@ -211,17 +352,10 @@
 
       // Re-render
       this.render();
-      this.makeRowsDraggable();
+      this.updateUI();
+      this.emitChange();
 
-      // Toast
       QS.toast.info('Reordered', `"${moved.name}" moved`, 1200);
-
-      // Emit change
-      emit('qs:file-list-change', {
-        count: this.files.length,
-        totalSize: this.getTotalSize(),
-        files: this.files.map(f => f.file)
-      });
     },
 
     /* ═══════════════════════════════════════════════
@@ -234,13 +368,11 @@
       let addedCount = 0;
 
       for (const file of newFiles) {
-        // Max file count
         if (this.files.length >= MAX_FILES) {
           skipped.push({ file, reason: `Max ${MAX_FILES} files` });
           continue;
         }
 
-        // Size check
         if (file.size > cfg.MAX_FILE_SIZE) {
           skipped.push({
             file,
@@ -249,7 +381,13 @@
           continue;
         }
 
-        // Duplicate check (same name + size)
+        // Total size check
+        const totalNow = this.getTotalSize();
+        if (totalNow + file.size > 200 * 1024 * 1024) {
+          skipped.push({ file, reason: 'Total size exceeded (max 200 MB)' });
+          continue;
+        }
+
         const isDuplicate = this.files.some(
           f => f.name === file.name && f.size === file.size
         );
@@ -258,7 +396,6 @@
           continue;
         }
 
-        // Add
         this.files.push({
           id: `local_${++this.fileCounter}`,
           file,
@@ -272,6 +409,7 @@
       if (addedCount > 0) {
         this.render();
         this.updateUI();
+        this.emitChange();
 
         const totalSize = this.getTotalSize();
         QS.toast.success(
@@ -279,15 +417,8 @@
           `${this.files.length} total · ${formatSize(totalSize)}`,
           2200
         );
-
-        emit('qs:file-list-change', {
-          count: this.files.length,
-          totalSize,
-          files: this.files.map(f => f.file)
-        });
       }
 
-      // Show skipped warning
       if (skipped.length > 0) {
         const msg = skipped
           .map(s => `"${s.file.name}" — ${s.reason}`)
@@ -308,14 +439,9 @@
       const removed = this.files.splice(idx, 1)[0];
       this.render();
       this.updateUI();
+      this.emitChange();
 
       QS.toast.info('Removed', removed.name, 1500);
-
-      emit('qs:file-list-change', {
-        count: this.files.length,
-        totalSize: this.getTotalSize(),
-        files: this.files.map(f => f.file)
-      });
     },
 
     /* ═══════════════════════════════════════════════
@@ -327,28 +453,29 @@
       this.render();
       this.updateUI();
       this.hideWarning();
+      this.emitChange();
 
-      // Reset file input
       if (this.els.fileInput) this.els.fileInput.value = '';
-
-      emit('qs:file-list-change', {
-        count: 0,
-        totalSize: 0,
-        files: []
-      });
     },
 
     /* ═══════════════════════════════════════════════
-       Render file rows
+       Render
        ═══════════════════════════════════════════════ */
     render() {
       const { items } = this.els;
       if (!items) return;
 
       items.innerHTML = '';
+      this.files.forEach(f => items.appendChild(this.createRow(f)));
 
-      this.files.forEach(f => {
-        items.appendChild(this.createRow(f));
+      // Enable drag only for multi-file
+      items.querySelectorAll('.file-row').forEach(row => {
+        const handle = row.querySelector('.file-row-drag');
+        if (handle) {
+          handle.setAttribute('tabindex', '0');
+          handle.setAttribute('role', 'button');
+          handle.setAttribute('aria-label', 'Drag to reorder');
+        }
       });
     },
 
@@ -358,10 +485,10 @@
         'data-id': f.id
       });
 
-      // Drag handle (দৃশ্যমান হবে multi-file হলে CSS দিয়ে)
+      // Drag handle
       const dragHandle = el('div', {
         class: 'file-row-drag',
-        title: 'Drag to reorder',
+        title: 'Drag to reorder (or use arrow keys)',
         html: '⋮⋮'
       });
 
@@ -425,7 +552,7 @@
     },
 
     /* ═══════════════════════════════════════════════
-       Update UI state
+       UI State
        ═══════════════════════════════════════════════ */
     updateUI() {
       const { container, count, size, dropzone } = this.els;
@@ -441,12 +568,10 @@
       if (count) count.textContent = String(this.files.length);
       if (size) size.textContent = formatSize(this.getTotalSize());
 
-      // Dropzone hide when files exist
       if (dropzone) {
         dropzone.classList.toggle('has-file', hasFiles);
       }
 
-      // Update send button state
       this.updateSendButton();
     },
 
@@ -465,13 +590,12 @@
     },
 
     /* ═══════════════════════════════════════════════
-       Warnings
+       Warning
        ═══════════════════════════════════════════════ */
     showWarning(msg) {
       if (!this.els.warning) return;
       this.els.warning.textContent = msg;
       this.els.warning.classList.add('show');
-
       clearTimeout(this._warningTimer);
       this._warningTimer = setTimeout(() => this.hideWarning(), 6000);
     },
@@ -480,6 +604,17 @@
       if (!this.els.warning) return;
       this.els.warning.classList.remove('show');
       this.els.warning.textContent = '';
+    },
+
+    /* ═══════════════════════════════════════════════
+       Emit change event
+       ═══════════════════════════════════════════════ */
+    emitChange() {
+      emit('qs:file-list-change', {
+        count: this.files.length,
+        totalSize: this.getTotalSize(),
+        files: this.files.map(f => f.file)
+      });
     },
 
     /* ═══════════════════════════════════════════════
@@ -493,13 +628,11 @@
       return this.files.map(f => f.file);
     },
 
-    /**
-     * Backend-এ পাঠানোর জন্য order array
-     * Format: "0,1,2,3" (comma-separated indices)
-     */
+    getItems() {
+      return [...this.files];
+    },
+
     getFileOrder() {
-      // files array already in correct order,
-      // প্রতিটা file-এর position index হবে
       return this.files.map((_, i) => i).join(',');
     },
 
@@ -511,9 +644,6 @@
       return this.files.length === 0;
     },
 
-    /**
-     * Row-এ uploading state set করে
-     */
     setRowState(localId, state, progress = 0) {
       const row = this.els.items?.querySelector(`[data-id="${localId}"]`);
       if (!row) return;

@@ -2,8 +2,8 @@
 
 .back-to-top {
   position: fixed;
-  bottom: 28px;
-  right: 28px;
+  bottom: 24px;
+  right: 24px;
   width: 48px;
   height: 48px;
   border-radius: 50%;
@@ -17,27 +17,12 @@
   box-shadow: var(--shadow-lg);
   opacity: 0;
   visibility: hidden;
-  transform: translateY(20px) scale(0.8);
-  transition: all var(--t-base);
+  transform: translateY(20px) scale(0.85);
+  transition: opacity var(--t-base), transform var(--t-base), visibility var(--t-base),
+    background var(--t-base), color var(--t-base);
   overflow: hidden;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-}
-
-/* Gradient halo */
-.back-to-top::before {
-  content: '';
-  position: absolute;
-  inset: -2px;
-  border-radius: inherit;
-  padding: 2px;
-  background: var(--gradient);
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-          mask-composite: exclude;
-  opacity: 0;
-  transition: opacity var(--t-base);
-  pointer-events: none;
+  /* backdrop-filter সরিয়ে দিলাম — mobile-এ lag করে */
+  /* এর বদলে solid background */
 }
 
 /* Show state */
@@ -48,40 +33,42 @@
 }
 
 /* Hover */
-.back-to-top:hover {
-  transform: translateY(-4px) scale(1.06);
-  background: var(--gradient);
-  color: #fff;
-  border-color: transparent;
-  box-shadow: 0 10px 30px var(--primary-glow);
+@media (hover: hover) and (pointer: fine) {
+  .back-to-top:hover {
+    transform: translateY(-3px) scale(1.06);
+    background: var(--gradient);
+    color: #fff;
+    border-color: transparent;
+    box-shadow: 0 10px 30px var(--primary-glow);
+  }
+
+  .back-to-top:hover svg {
+    transform: translateY(-2px);
+  }
 }
 
-.back-to-top:hover::before {
-  opacity: 1;
-}
-
-/* Active (click) */
 .back-to-top:active {
-  transform: translateY(-2px) scale(1.02);
+  transform: translateY(-1px) scale(1.02);
 }
 
 /* Icon */
 .back-to-top svg {
   display: block;
   transition: transform var(--t-base);
+  /* Fix: subpixel rendering */
+  shape-rendering: geometricPrecision;
+  backface-visibility: hidden;
 }
 
-.back-to-top:hover svg {
-  transform: translateY(-2px);
-}
-
-/* Progress ring (page scroll %) */
+/* ── Progress ring (mobile-এ hide) ── */
 .back-to-top .scroll-ring {
   position: absolute;
   inset: 0;
   border-radius: 50%;
   transform: rotate(-90deg);
   pointer-events: none;
+  /* Fix: subpixel rendering */
+  shape-rendering: geometricPrecision;
 }
 
 .back-to-top .scroll-ring circle {
@@ -89,46 +76,46 @@
   stroke: var(--primary);
   stroke-width: 2;
   stroke-linecap: round;
-  stroke-dasharray: 138; /* 2πr ≈ 138 for r=22 */
-  stroke-dashoffset: 138;
-  opacity: 0.65;
-  transition: stroke-dashoffset 0.15s linear;
+  /* Fix: white buffer issue */
+  will-change: stroke-dashoffset;
+  transition: stroke-dashoffset 0.1s linear;
 }
 
-.back-to-top:hover .scroll-ring circle {
-  opacity: 0;
-}
-
-/* ── Tablet ── */
+/* ── Mobile ── */
 @media (max-width: 900px) {
   .back-to-top {
     width: 44px;
     height: 44px;
-    bottom: 22px;
-    right: 22px;
+    bottom: 20px;
+    right: 20px;
   }
 }
 
-/* ── Mobile ── */
 @media (max-width: 600px) {
   .back-to-top {
     width: 42px;
     height: 42px;
     bottom: 18px;
     right: 18px;
+    /* Mobile-এ ring-এর white buffer এড়াতে */
+    background: var(--bg-elevated);
   }
 
   .back-to-top svg {
     width: 20px;
     height: 20px;
   }
+
+  /* 📱 Mobile-এ progress ring hide */
+  .back-to-top .scroll-ring {
+    display: none;
+  }
 }
 
-/* ── Reduced motion ── */
+/* ── Reduce motion ── */
 @media (prefers-reduced-motion: reduce) {
   .back-to-top,
-  .back-to-top svg,
-  .back-to-top::before {
+  .back-to-top svg {
     transition: none;
   }
 }

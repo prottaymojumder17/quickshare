@@ -1,0 +1,1085 @@
+/* =========================================================
+   PREVIEW MODAL
+   Full-screen file preview
+   ========================================================= */
+
+
+/* =========================================================
+   BACKDROP
+   ========================================================= */
+
+.preview-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+
+    display: grid;
+    place-items: center;
+
+    padding: var(--s-4);
+
+    background: rgba(0, 0, 0, 0.85);
+
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+
+    opacity: 0;
+    visibility: hidden;
+
+    transition:
+        opacity 0.25s ease,
+        visibility 0.25s ease;
+}
+
+
+/* Modal visible */
+
+.preview-modal.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+
+/* =========================================================
+   MODAL CARD
+   ========================================================= */
+
+.preview-modal-card {
+    position: relative;
+
+    width: 100%;
+    max-width: 1000px;
+
+    height: 90vh;
+    max-height: 90vh;
+
+    background: var(--bg-card);
+
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+
+    display: flex;
+    flex-direction: column;
+
+    overflow: hidden;
+
+    box-shadow:
+        0 30px 80px rgba(0, 0, 0, 0.6);
+
+    transform:
+        scale(0.9)
+        translateY(20px);
+
+    transition:
+        transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+
+/* Modal animation */
+
+.preview-modal.show .preview-modal-card {
+    transform:
+        scale(1)
+        translateY(0);
+}
+
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+
+.preview-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: var(--s-3);
+
+    padding:
+        var(--s-4)
+        var(--s-5);
+
+    border-bottom: 1px solid var(--border);
+
+    background: var(--bg-elevated);
+
+    flex-shrink: 0;
+}
+
+
+/* =========================================================
+   TITLE AREA
+   ========================================================= */
+
+.preview-modal-title {
+    display: flex;
+    align-items: center;
+
+    gap: var(--s-3);
+
+    min-width: 0;
+    flex: 1;
+}
+
+
+/* File icon */
+
+.preview-modal-icon {
+    width: 40px;
+    height: 40px;
+
+    flex-shrink: 0;
+
+    border-radius: var(--radius-sm);
+
+    background: var(--primary-soft);
+
+    border: 1px solid var(--border);
+
+    display: grid;
+    place-items: center;
+
+    font-size: 1.3rem;
+}
+
+
+/* File information */
+
+.preview-modal-info {
+    min-width: 0;
+    flex: 1;
+}
+
+
+/* File name */
+
+.preview-modal-name {
+    font-size: 0.95rem;
+
+    font-weight: 600;
+
+    color: var(--text);
+
+    white-space: nowrap;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+}
+
+
+/* File metadata */
+
+.preview-modal-meta {
+    font-size: 0.78rem;
+
+    color: var(--text-muted);
+
+    margin-top: 2px;
+
+    display: flex;
+    align-items: center;
+
+    gap: var(--s-2);
+}
+
+
+/* Metadata separator */
+
+.preview-modal-meta span + span::before {
+    content: "·";
+
+    margin-right: var(--s-2);
+
+    color: var(--text-faint);
+}
+
+
+/* =========================================================
+   HEADER ACTIONS
+   ========================================================= */
+
+.preview-modal-actions {
+    display: flex;
+    align-items: center;
+
+    gap: var(--s-2);
+
+    flex-shrink: 0;
+}
+
+
+/* Action button */
+
+.preview-modal-btn {
+    width: 38px;
+    height: 38px;
+
+    border-radius: var(--radius-sm);
+
+    background: transparent;
+
+    border: 1px solid var(--border);
+
+    color: var(--text-muted);
+
+    cursor: pointer;
+
+    display: grid;
+    place-items: center;
+
+    transition:
+        background var(--t-fast),
+        color var(--t-fast),
+        border-color var(--t-fast),
+        transform var(--t-fast);
+
+    font-size: 1rem;
+
+    flex-shrink: 0;
+}
+
+
+/* Button hover */
+
+.preview-modal-btn:hover {
+    background: var(--bg-hover);
+
+    color: var(--text);
+
+    border-color: var(--border-strong);
+}
+
+
+/* Close button hover */
+
+.preview-modal-btn.close-btn:hover {
+    background: var(--danger-soft);
+
+    color: var(--danger);
+
+    border-color: var(--danger);
+}
+
+
+/* =========================================================
+   PREVIEW BODY
+   ========================================================= */
+
+.preview-modal-body {
+    position: relative;
+
+    flex: 1 1 0;
+
+    min-width: 0;
+    min-height: 0;
+
+    width: 100%;
+
+    overflow: hidden;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    background: #000;
+
+    padding: 8px;
+
+    box-sizing: border-box;
+}
+
+
+/* =========================================================
+   IMAGE PREVIEW
+   ========================================================= */
+
+/*
+   IMPORTANT
+
+   Image must:
+
+   - Keep original aspect ratio
+   - Never crop
+   - Never stretch
+   - Become smaller when necessary
+   - Fit completely inside preview body
+*/
+
+.preview-modal-body img {
+    display: block;
+
+    /*
+       IMPORTANT:
+       Do NOT use width:100%
+       Do NOT use height:100%
+    */
+
+    width: auto !important;
+    height: auto !important;
+
+    /*
+       Keep image completely inside
+       the available preview area.
+    */
+
+    max-width: calc(100% - 16px) !important;
+    max-height: calc(100% - 16px) !important;
+
+    /*
+       Preserve original image ratio.
+    */
+
+    object-fit: contain;
+    object-position: center;
+
+    /*
+       Prevent flexbox from changing
+       the natural image size.
+    */
+
+    flex: 0 1 auto;
+
+    min-width: 0 !important;
+    min-height: 0 !important;
+
+    margin: auto;
+
+    /*
+       Image itself should never crop.
+    */
+
+    overflow: visible;
+}
+
+
+/* =========================================================
+   VIDEO PREVIEW
+   ========================================================= */
+
+.preview-modal-body video {
+    display: block;
+
+    width: auto !important;
+    height: auto !important;
+
+    max-width: calc(100% - 16px) !important;
+    max-height: calc(100% - 16px) !important;
+
+    object-fit: contain;
+    object-position: center;
+
+    flex: 0 1 auto;
+
+    min-width: 0 !important;
+    min-height: 0 !important;
+
+    margin: auto;
+
+    background: #000;
+}
+
+
+/* =========================================================
+   AUDIO PREVIEW
+   ========================================================= */
+
+.preview-modal-body .audio-wrap {
+    width: 100%;
+    height: 100%;
+
+    padding:
+        var(--s-10)
+        var(--s-6);
+
+    text-align: center;
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+    justify-content: center;
+
+    background: var(--bg-card);
+
+    box-sizing: border-box;
+}
+
+
+/* Audio icon */
+
+.preview-modal-body .audio-icon {
+    font-size: 4rem;
+
+    margin-bottom: var(--s-5);
+
+    filter:
+        drop-shadow(
+            0 4px 20px
+            var(--primary-glow)
+        );
+}
+
+
+/* Audio player */
+
+.preview-modal-body audio {
+    width: 100%;
+
+    max-width: 480px;
+
+    margin: 0 auto;
+}
+
+
+/* =========================================================
+   PDF PREVIEW
+   ========================================================= */
+
+.preview-modal-body iframe {
+    display: block;
+
+    width: 100%;
+    height: 100%;
+
+    border: 0;
+
+    background: #fff;
+}
+
+
+/* =========================================================
+   TEXT FILE PREVIEW
+   ========================================================= */
+
+.preview-modal-body .text-preview {
+    position: absolute;
+
+    inset: 0;
+
+    padding: var(--s-6);
+
+    background: var(--bg-input);
+
+    color: var(--text-soft);
+
+    font-family:
+        "JetBrains Mono",
+        monospace;
+
+    font-size: 0.85rem;
+
+    line-height: 1.6;
+
+    white-space: pre-wrap;
+
+    word-break: break-word;
+
+    overflow-y: auto;
+
+    text-align: left;
+
+    box-sizing: border-box;
+}
+
+
+/* =========================================================
+   NO PREVIEW
+   ========================================================= */
+
+.preview-modal-body .no-preview {
+    width: 100%;
+    height: 100%;
+
+    padding:
+        var(--s-10)
+        var(--s-6);
+
+    text-align: center;
+
+    color: var(--text-muted);
+
+    background: var(--bg-card);
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+    justify-content: center;
+
+    box-sizing: border-box;
+}
+
+
+/* No preview icon */
+
+.preview-modal-body .no-preview-icon {
+    font-size: 4rem;
+
+    margin-bottom: var(--s-4);
+
+    opacity: 0.6;
+}
+
+
+/* No preview text */
+
+.preview-modal-body .no-preview-text {
+    font-size: 0.95rem;
+
+    margin-bottom: var(--s-4);
+}
+
+
+/* =========================================================
+   LOADER
+   ========================================================= */
+
+.preview-modal-loader {
+    position: absolute;
+
+    inset: 0;
+
+    display: grid;
+
+    place-items: center;
+
+    background: rgba(0, 0, 0, 0.6);
+
+    z-index: 2;
+}
+
+
+/* Loader spinner */
+
+.preview-modal-loader .spinner {
+    width: 44px;
+    height: 44px;
+
+    border-width: 3px;
+}
+
+
+/* =========================================================
+   BOTTOM NAVIGATION
+   ========================================================= */
+
+.preview-modal-nav {
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    gap: var(--s-3);
+
+    padding:
+        var(--s-3)
+        var(--s-5);
+
+    border-top: 1px solid var(--border);
+
+    background: var(--bg-elevated);
+
+    flex-shrink: 0;
+}
+
+
+/* Hide navigation */
+
+.preview-modal-nav.hidden {
+    display: none;
+}
+
+
+/* =========================================================
+   PREVIOUS / NEXT BUTTON
+   ========================================================= */
+
+.preview-nav-btn {
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    gap: var(--s-2);
+
+    padding:
+        8px 16px;
+
+    background: var(--bg-card);
+
+    border: 1px solid var(--border);
+
+    border-radius: var(--radius-md);
+
+    color: var(--text);
+
+    font-family: "Inter", sans-serif;
+
+    font-size: 0.85rem;
+
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+        background var(--t-fast),
+        border-color var(--t-fast),
+        transform var(--t-fast);
+
+    min-width: 90px;
+}
+
+
+/* Navigation hover */
+
+.preview-nav-btn:hover:not(:disabled) {
+    background: var(--bg-hover);
+
+    border-color: var(--border-strong);
+
+    transform: translateY(-1px);
+}
+
+
+/* Disabled navigation */
+
+.preview-nav-btn:disabled {
+    opacity: 0.4;
+
+    cursor: not-allowed;
+}
+
+
+/* =========================================================
+   NAVIGATION COUNTER
+   ========================================================= */
+
+.preview-nav-counter {
+    font-family:
+        "JetBrains Mono",
+        monospace;
+
+    font-size: 0.85rem;
+
+    font-weight: 700;
+
+    color: var(--text-muted);
+
+    padding:
+        6px 14px;
+
+    background: var(--bg-card);
+
+    border: 1px solid var(--border);
+
+    border-radius: var(--radius-full);
+
+    letter-spacing: 0.05em;
+}
+
+
+/* =========================================================
+   FLOATING LEFT / RIGHT ARROWS
+   ========================================================= */
+
+.preview-float-nav {
+    position: absolute;
+
+    top: 50%;
+
+    transform:
+        translateY(-50%);
+
+    width: 48px;
+    height: 48px;
+
+    border-radius: 50%;
+
+    background:
+        rgba(0, 0, 0, 0.6);
+
+    border:
+        1px solid
+        rgba(255, 255, 255, 0.15);
+
+    color: #fff;
+
+    cursor: pointer;
+
+    display: grid;
+
+    place-items: center;
+
+    font-size: 1.3rem;
+
+    transition:
+        background var(--t-fast),
+        transform var(--t-fast),
+        opacity var(--t-fast);
+
+    z-index: 3;
+
+    backdrop-filter: blur(8px);
+
+    -webkit-backdrop-filter: blur(8px);
+}
+
+
+/* Floating arrow hover */
+
+.preview-float-nav:hover:not(:disabled) {
+    background: var(--primary);
+
+    transform:
+        translateY(-50%)
+        scale(1.08);
+}
+
+
+/* Disabled arrow */
+
+.preview-float-nav:disabled {
+    opacity: 0;
+
+    pointer-events: none;
+}
+
+
+/* Previous arrow */
+
+.preview-float-nav.prev {
+    left: 12px;
+}
+
+
+/* Next arrow */
+
+.preview-float-nav.next {
+    right: 12px;
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 600px) {
+
+    /* Full screen modal */
+
+    .preview-modal {
+        padding: 0;
+    }
+
+
+    /* Modal card */
+
+    .preview-modal-card {
+        width: 100%;
+
+        height: 100vh;
+
+        max-width: 100%;
+        max-height: 100vh;
+
+        border-radius: 0;
+
+        border: none;
+    }
+
+
+    /* Header */
+
+    .preview-modal-header {
+        padding:
+            var(--s-3)
+            var(--s-4);
+    }
+
+
+    /* Icon */
+
+    .preview-modal-icon {
+        width: 36px;
+        height: 36px;
+
+        font-size: 1.15rem;
+    }
+
+
+    /* Filename */
+
+    .preview-modal-name {
+        font-size: 0.88rem;
+    }
+
+
+    /* Metadata */
+
+    .preview-modal-meta {
+        font-size: 0.72rem;
+    }
+
+
+    /* Header buttons */
+
+    .preview-modal-btn {
+        width: 34px;
+        height: 34px;
+
+        font-size: 0.9rem;
+    }
+
+
+    /* Hide floating arrows */
+
+    .preview-float-nav {
+        display: none;
+    }
+
+
+    /* Bottom navigation */
+
+    .preview-modal-nav {
+        padding:
+            var(--s-2)
+            var(--s-4);
+    }
+
+
+    /* Navigation button */
+
+    .preview-nav-btn {
+        padding:
+            8px 12px;
+
+        font-size: 0.8rem;
+
+        min-width: 70px;
+    }
+
+
+    /* Counter */
+
+    .preview-nav-counter {
+        font-size: 0.78rem;
+
+        padding:
+            5px 10px;
+    }
+
+
+    /* Preview body */
+
+    .preview-modal-body {
+        padding: 8px;
+
+        min-width: 0;
+        min-height: 0;
+
+        overflow: hidden;
+    }
+
+
+    /*
+       IMPORTANT:
+
+       এখানে আবার width:100%
+       height:100% দেওয়া যাবে না।
+
+       কারণ এতে image crop হওয়ার
+       সম্ভাবনা থাকে।
+    */
+
+    .preview-modal-body img {
+        width: auto !important;
+        height: auto !important;
+
+        max-width: calc(100% - 16px) !important;
+        max-height: calc(100% - 16px) !important;
+
+        object-fit: contain;
+
+        flex: 0 1 auto;
+
+        min-width: 0 !important;
+        min-height: 0 !important;
+
+        margin: auto;
+    }
+
+
+    /* Mobile video */
+
+    .preview-modal-body video {
+        width: auto !important;
+        height: auto !important;
+
+        max-width: calc(100% - 16px) !important;
+        max-height: calc(100% - 16px) !important;
+
+        object-fit: contain;
+
+        flex: 0 1 auto;
+
+        min-width: 0 !important;
+        min-height: 0 !important;
+
+        margin: auto;
+    }
+}
+
+
+/* =========================================================
+   VERY SMALL SCREEN
+   ========================================================= */
+
+@media (max-width: 400px) {
+
+    .preview-modal-title {
+        gap: var(--s-2);
+    }
+
+
+    .preview-modal-icon {
+        width: 32px;
+        height: 32px;
+
+        font-size: 1rem;
+    }
+
+
+    .preview-modal-name {
+        font-size: 0.82rem;
+    }
+
+
+    .preview-modal-meta {
+        font-size: 0.68rem;
+    }
+
+
+    .preview-modal-actions {
+        gap: 4px;
+    }
+
+
+    .preview-modal-btn {
+        width: 32px;
+        height: 32px;
+    }
+
+
+    .preview-modal-body {
+        padding: 6px;
+    }
+
+
+    .preview-modal-body img {
+        max-width: calc(100% - 12px) !important;
+        max-height: calc(100% - 12px) !important;
+    }
+
+
+    .preview-modal-body video {
+        max-width: calc(100% - 12px) !important;
+        max-height: calc(100% - 12px) !important;
+    }
+}
+
+
+/* =========================================================
+   LANDSCAPE MOBILE
+   ========================================================= */
+
+@media (max-width: 900px) and (orientation: landscape) {
+
+    .preview-modal {
+        padding: 0;
+    }
+
+
+    .preview-modal-card {
+        width: 100%;
+        height: 100vh;
+
+        max-width: 100%;
+        max-height: 100vh;
+
+        border-radius: 0;
+    }
+
+
+    .preview-modal-header {
+        padding:
+            8px 12px;
+    }
+
+
+    .preview-modal-icon {
+        width: 32px;
+        height: 32px;
+
+        font-size: 1rem;
+    }
+
+
+    .preview-modal-btn {
+        width: 32px;
+        height: 32px;
+    }
+
+
+    .preview-modal-nav {
+        padding:
+            6px 12px;
+    }
+
+
+    .preview-modal-body {
+        padding: 6px;
+    }
+
+
+    .preview-modal-body img {
+        width: auto !important;
+        height: auto !important;
+
+        max-width: calc(100% - 12px) !important;
+        max-height: calc(100% - 12px) !important;
+
+        object-fit: contain;
+    }
+
+
+    .preview-modal-body video {
+        width: auto !important;
+        height: auto !important;
+
+        max-width: calc(100% - 12px) !important;
+        max-height: calc(100% - 12px) !important;
+
+        object-fit: contain;
+    }
+}
+
+
+/* =========================================================
+   REDUCED MOTION
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+    .preview-modal,
+    .preview-modal-card,
+    .preview-modal-btn,
+    .preview-nav-btn,
+    .preview-float-nav {
+        transition: none;
+    }
+}

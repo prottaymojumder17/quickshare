@@ -9,8 +9,9 @@ module.exports = {
   NODE_ENV: process.env.NODE_ENV || 'development',
   BASE_URL: process.env.BASE_URL || 'http://localhost:3000',
 
-  // File limits
-  MAX_FILE_SIZE: parseInt(process.env.MAX_FILE_SIZE) || 100 * 1024 * 1024, // 100MB
+  // Multi-file limits
+  MAX_FILES_PER_TRANSFER: 5,
+  MAX_TOTAL_SIZE: 200 * 1024 * 1024, // 200MB total per transfer // 100MB
 
   // Transfer expiry (minutes)
   EXPIRY_MINUTES: parseInt(process.env.EXPIRY_MINUTES) || 10,

@@ -47,6 +47,8 @@
     <link rel="stylesheet" href="/css/components/hero.css">
     <link rel="stylesheet" href="/css/components/transfer-card.css">
     <link rel="stylesheet" href="/css/components/dropzone.css">
+    <link rel="stylesheet" href="/css/components/file-list.css">
+    <link rel="stylesheet" href="/css/components/preview-modal.css">
     <link rel="stylesheet" href="/css/components/progress.css">
     <link rel="stylesheet" href="/css/components/code-display.css">
     <link rel="stylesheet" href="/css/components/toast.css">
@@ -58,7 +60,7 @@
     <link rel="stylesheet" href="/css/components/back-to-top.css">
     <link rel="stylesheet" href="/css/responsive.css">
 
-    <!-- QR Code Library (local fallback, CDN later) -->
+    <!-- QR Code Library -->
     <script src="/libs/qrcode.min.js" defer></script>
 </head>
 
@@ -76,8 +78,8 @@
                 <a href="#features" class="nav-link">Features</a>
                 <a href="#how-it-works" class="nav-link">How it Works</a>
                 <a href="#faq" class="nav-link">FAQ</a>
-                <a href="https://github.com/prottaymojumder17/quickshare/prottaymojumder17/quickshare" target="_blank"
-                    rel="noopener" class="nav-link">
+                <a href="https://github.com/prottaymojumder17/quickshare" target="_blank" rel="noopener"
+                    class="nav-link">
                     GitHub
                 </a>
             </nav>
@@ -182,28 +184,39 @@
                     <!-- ── File Send ── -->
                     <div class="subpanel active" id="subpanel-file">
                         <div class="dropzone" id="dropzone">
-                            <input type="file" id="fileInput" hidden>
+                            <input type="file" id="fileInput" hidden multiple>
                             <div class="dropzone-content">
                                 <div class="dropzone-icon">⬆️</div>
                                 <div class="dropzone-title">
-                                    Drop your file here or <span class="link">browse</span>
+                                    Drop files here or <span class="link">browse</span>
                                 </div>
                                 <div class="dropzone-hint">
-                                    Any file type · Max 100 MB
+                                    Up to 5 files · Max 100 MB each
                                 </div>
                             </div>
                             <div class="dropzone-overlay"></div>
                         </div>
 
-                        <div class="file-preview" id="filePreview" hidden>
-                            <div class="file-preview-icon" id="filePreviewIcon">📄</div>
-                            <div class="file-preview-info">
-                                <div class="file-preview-name" id="filePreviewName">filename.ext</div>
-                                <div class="file-preview-size" id="filePreviewSize">0 MB</div>
+                        <!-- ═══ File List (Multi-file) ═══ -->
+                        <div class="file-list" id="fileList">
+                            <div class="file-list-header">
+                                <div class="file-list-title">
+                                    <span>📁</span>
+                                    <span id="fileListCount">0</span>
+                                    <span>file(s)</span>
+                                    <span class="file-list-size" id="fileListSize">0 B</span>
+                                </div>
+                                <div class="file-list-actions">
+                                    <button type="button" class="file-list-action-btn" id="fileListAddMore">
+                                        <span>+</span> Add
+                                    </button>
+                                    <button type="button" class="file-list-action-btn danger" id="fileListClearAll">
+                                        <span>🗑️</span> Clear
+                                    </button>
+                                </div>
                             </div>
-                            <button class="file-preview-remove" id="fileRemoveBtn" aria-label="Remove">
-                                ✕
-                            </button>
+                            <div class="file-list-items" id="fileListItems"></div>
+                            <div class="file-list-warning" id="fileListWarning"></div>
                         </div>
 
                         <!-- Progress -->
@@ -344,8 +357,8 @@
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon">📁</div>
-                    <h3 class="feature-title">Any File Type</h3>
-                    <p class="feature-text">Audio, video, documents, images — up to 100 MB.</p>
+                    <h3 class="feature-title">Multiple Files</h3>
+                    <p class="feature-text">Send up to 5 files at once — audio, video, images, documents.</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon">📝</div>
@@ -380,7 +393,7 @@
                     <div class="step-number">1</div>
                     <div class="step-icon">📤</div>
                     <h3 class="step-title">Upload</h3>
-                    <p class="step-text">Drop your file or paste text in the send tab.</p>
+                    <p class="step-text">Drop your files or paste text in the send tab.</p>
                 </div>
                 <div class="step-connector"></div>
                 <div class="step-card">
@@ -409,8 +422,8 @@
                     <div class="stat-label">Active Transfers</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-number">100<span class="stat-unit">MB</span></div>
-                    <div class="stat-label">Max File Size</div>
+                    <div class="stat-number">5<span class="stat-unit">files</span></div>
+                    <div class="stat-label">Per Transfer</div>
                 </div>
                 <div class="stat-item">
                     <div class="stat-number">10<span class="stat-unit">min</span></div>
@@ -450,8 +463,19 @@
                         <span class="faq-icon">+</span>
                     </button>
                     <div class="faq-answer">
-                        <p>Any file type — audio, video, documents, images, archives, and more. Up to 100 MB per file.
-                        </p>
+                        <p>Any file type — audio, video, documents, images, archives, and more. Up to 100 MB per file,
+                            max 5 files per transfer.</p>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <button class="faq-question">
+                        <span>Can I send multiple files at once?</span>
+                        <span class="faq-icon">+</span>
+                    </button>
+                    <div class="faq-answer">
+                        <p>Yes! You can send up to 5 files in a single transfer. They'll all share the same code — the
+                            receiver can download each one individually or get them all as a ZIP.</p>
                     </div>
                 </div>
 
@@ -484,17 +508,6 @@
                     <div class="faq-answer">
                         <p>Your data is stored in memory only and auto-deleted after expiry. No one can access without
                             the secret code.</p>
-                    </div>
-                </div>
-
-                <div class="faq-item">
-                    <button class="faq-question">
-                        <span>Can I share with multiple people?</span>
-                        <span class="faq-icon">+</span>
-                    </button>
-                    <div class="faq-answer">
-                        <p>Yes! Share the same code with anyone. Files can be downloaded multiple times until expiry.
-                        </p>
                     </div>
                 </div>
             </div>
@@ -544,8 +557,7 @@
                 <div class="footer-col">
                     <h4>Connect</h4>
                     <a href="mailto:prottay-dev10@gmail.com">Contact</a>
-                    <a href="https://github.com/prottaymojumder17/quickshare/prottaymojumder17/quickshare"
-                        target="_blank" rel="noopener">GitHub</a>
+                    <a href="https://github.com/prottaymojumder17/quickshare" target="_blank" rel="noopener">GitHub</a>
                 </div>
             </div>
         </div>
@@ -564,6 +576,58 @@
         </svg>
     </button>
 
+<!-- ═══════════════ PREVIEW MODAL ═══════════════ -->
+<div class="preview-modal" id="previewModal" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="preview-modal-card">
+
+        <!-- Header -->
+        <div class="preview-modal-header">
+            <div class="preview-modal-title">
+                <div class="preview-modal-icon" id="previewModalIcon">📄</div>
+                <div class="preview-modal-info">
+                    <div class="preview-modal-name" id="previewModalName">filename</div>
+                    <div class="preview-modal-meta" id="previewModalMeta"></div>
+                </div>
+            </div>
+            <div class="preview-modal-actions">
+                <button type="button" class="preview-modal-btn" id="previewModalDownloadBtn" title="Download"
+                    aria-label="Download">
+                    <span>⬇️</span>
+                </button>
+                <button type="button" class="preview-modal-btn close-btn" id="previewModalCloseBtn" title="Close (Esc)"
+                    aria-label="Close">
+                    <span>✕</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Body -->
+        <div class="preview-modal-body" id="previewModalBody">
+            <!-- Populated by JS -->
+        </div>
+
+        <!-- Float nav arrows -->
+        <button type="button" class="preview-float-nav prev" id="previewFloatPrev" aria-label="Previous">
+            <span>‹</span>
+        </button>
+        <button type="button" class="preview-float-nav next" id="previewFloatNext" aria-label="Next">
+            <span>›</span>
+        </button>
+
+        <!-- Bottom navigation -->
+        <div class="preview-modal-nav hidden" id="previewModalNav">
+            <button type="button" class="preview-nav-btn" id="previewNavPrev">
+                <span>←</span> Prev
+            </button>
+            <span class="preview-nav-counter" id="previewNavCounter">1 / 1</span>
+            <button type="button" class="preview-nav-btn" id="previewNavNext">
+                Next <span>→</span>
+            </button>
+        </div>
+
+    </div>
+</div>
+
     <!-- ═══════════════ TOAST CONTAINER ═══════════════ -->
     <div class="toast-container" id="toastContainer"></div>
 
@@ -578,6 +642,8 @@
     <script src="/js/components/progress.js"></script>
     <script src="/js/components/clipboard.js"></script>
     <script src="/js/components/dragdrop.js"></script>
+    <script src="/js/components/fileList.js"></script>
+    <script src="/js/components/previewModal.js"></script>
     <script src="/js/components/paste.js"></script>
     <script src="/js/components/qrcode.js"></script>
     <script src="/js/components/codeDisplay.js"></script>

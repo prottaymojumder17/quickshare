@@ -5,7 +5,9 @@
   position: relative;
 }
 
-/* ── Grid ── */
+/* ═══════════════════════════════════════════════
+   Grid
+   ═══════════════════════════════════════════════ */
 .steps-grid {
   display: flex;
   align-items: stretch;
@@ -14,19 +16,22 @@
   max-width: 1000px;
   margin: 0 auto;
   position: relative;
+  padding-top: var(--s-6);
 }
 
-/* ── Card ── */
+/* ═══════════════════════════════════════════════
+   Card
+   ═══════════════════════════════════════════════ */
 .step-card {
   flex: 1;
   position: relative;
-  padding: var(--s-6) var(--s-5);
+  padding: var(--s-8) var(--s-5) var(--s-6);
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   text-align: center;
   transition: all var(--t-base);
-  overflow: hidden;
+  overflow: visible;
   max-width: 300px;
 }
 
@@ -36,14 +41,16 @@
   box-shadow: var(--shadow-lg), var(--shadow-glow);
 }
 
-/* ── Number badge ── */
+/* ═══════════════════════════════════════════════
+   Number badge
+   ═══════════════════════════════════════════════ */
 .step-number {
   position: absolute;
-  top: -14px;
+  top: -18px;
   left: 50%;
   transform: translateX(-50%);
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   background: var(--gradient);
   color: #fff;
@@ -51,25 +58,31 @@
   place-items: center;
   font-family: 'Space Grotesk', sans-serif;
   font-weight: 700;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   box-shadow: 0 6px 16px var(--primary-glow);
-  z-index: 2;
+  z-index: 10;
   border: 3px solid var(--bg);
 }
 
-/* ── Icon ── */
+/* ═══════════════════════════════════════════════
+   Icon
+   ═══════════════════════════════════════════════ */
 .step-icon {
-  font-size: 2.4rem;
-  margin: var(--s-4) 0 var(--s-3);
+  font-size: 2.8rem;
+  margin: var(--s-8) 0 var(--s-4);
   filter: drop-shadow(0 4px 12px var(--primary-glow));
   transition: transform var(--t-base);
+  line-height: 1;
+  display: inline-block;
 }
 
 .step-card:hover .step-icon {
   transform: scale(1.15) rotate(-5deg);
 }
 
-/* ── Title & text ── */
+/* ═══════════════════════════════════════════════
+   Title & text
+   ═══════════════════════════════════════════════ */
 .step-title {
   font-size: 1.1rem;
   margin-bottom: var(--s-2);
@@ -82,7 +95,9 @@
   line-height: 1.6;
 }
 
-/* ── Connector (dotted line between cards) ── */
+/* ═══════════════════════════════════════════════
+   Connector (horizontal dotted line)
+   ═══════════════════════════════════════════════ */
 .step-connector {
   align-self: center;
   width: 40px;
@@ -111,6 +126,158 @@
   border-right: 2px solid var(--border-strong);
   transform: translateY(-50%) rotate(45deg);
 }
+
+/* ═══════════════════════════════════════════════
+   TABLET (max 900px) — Vertical stack
+   ═══════════════════════════════════════════════ */
+@media (max-width: 900px) {
+  .steps {
+    padding: var(--s-12) 0;
+  }
+
+  .steps-grid {
+    flex-direction: column;
+    align-items: center;
+    gap: var(--s-8);
+    padding-top: var(--s-6);
+    max-width: 420px;
+    margin: 0 auto;
+  }
+
+  .step-card {
+    width: 100%;
+    max-width: 420px;
+    padding: var(--s-8) var(--s-6) var(--s-6);
+  }
+
+  /* Vertical connector */
+  .step-connector {
+    width: 2px;
+    height: 32px;
+    background-image: linear-gradient(
+      to bottom,
+      var(--border-strong) 50%,
+      transparent 50%
+    );
+    background-size: 2px 12px;
+    background-repeat: repeat-y;
+    margin-top: 0;
+    margin-left: 0;
+    position: relative;
+  }
+
+  /* Arrow now points down */
+  .step-connector::after {
+    right: auto;
+    top: auto;
+    bottom: -5px;
+    left: 50%;
+    width: 8px;
+    height: 8px;
+    border-top: 2px solid var(--border-strong);
+    border-right: 2px solid var(--border-strong);
+    transform: translateX(-50%) rotate(135deg);
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   MOBILE (max 600px) — Optimized
+   ═══════════════════════════════════════════════ */
+@media (max-width: 600px) {
+  .steps {
+    padding: var(--s-10) 0;
+  }
+
+  .section-header {
+    margin-bottom: var(--s-8);
+  }
+
+  .steps-grid {
+    gap: var(--s-6);
+    padding-top: var(--s-4);
+    max-width: 100%;
+  }
+
+  .step-card {
+    max-width: 100%;
+    padding: var(--s-7, 28px) var(--s-5) var(--s-5);
+    border-radius: var(--radius-md);
+  }
+
+  /* Number badge smaller */
+  .step-number {
+    top: -16px;
+    width: 32px;
+    height: 32px;
+    font-size: 0.85rem;
+    border-width: 2px;
+    box-shadow: 0 4px 12px var(--primary-glow);
+  }
+
+  /* Icon size */
+  .step-icon {
+    font-size: 2.4rem;
+    margin: var(--s-6) 0 var(--s-3);
+  }
+
+  .step-title {
+    font-size: 1.05rem;
+  }
+
+  .step-text {
+    font-size: 0.85rem;
+    line-height: 1.55;
+  }
+
+  /* Shorter connector */
+  .step-connector {
+    height: 28px;
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   EXTRA SMALL (max 380px)
+   ═══════════════════════════════════════════════ */
+@media (max-width: 380px) {
+  .step-card {
+    padding: var(--s-6) var(--s-4) var(--s-4);
+  }
+
+  .step-number {
+    top: -14px;
+    width: 28px;
+    height: 28px;
+    font-size: 0.78rem;
+  }
+
+  .step-icon {
+    font-size: 2.1rem;
+    margin: var(--s-5) 0 var(--s-2);
+  }
+
+  .step-title {
+    font-size: 1rem;
+  }
+
+  .step-text {
+    font-size: 0.82rem;
+  }
+
+  .step-connector {
+    height: 24px;
+  }
+}
+
+/* ═══════════════════════════════════════════════
+  REDUCED MOTION
+   ═══════════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+  .step-card,
+  .step-icon {
+    transition: none;
+  }
+}
+
 
 /* ── Tablet ── */
 @media (max-width: 900px) {
@@ -149,5 +316,36 @@
     bottom: -4px;
     left: 50%;
     transform: translateX(-50%) rotate(135deg);
+  }
+}
+
+
+/* ═══════════════════════════════════════════════
+   Mobile Section Header
+   ═══════════════════════════════════════════════ */
+@media (max-width: 600px) {
+  .steps .section-tag {
+    font-size: 0.7rem;
+    padding: 5px 12px;
+    margin-bottom: var(--s-3);
+  }
+
+  .steps .section-title {
+    font-size: 1.7rem;
+    margin-bottom: var(--s-2);
+  }
+
+  .steps .section-subtitle {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 380px) {
+  .steps .section-title {
+    font-size: 1.5rem;
+  }
+
+  .steps .section-subtitle {
+    font-size: 0.85rem;
   }
 }

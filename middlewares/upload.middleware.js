@@ -1,21 +1,23 @@
 // middlewares/upload.middleware.js
-// Multer setup — file receive করার জন্য
+// Multer setup — single + multi-file receive
 
 const multer = require('multer');
-const { MAX_FILE_SIZE } = require('../config/constants');
+const {
+  MAX_FILE_SIZE,
+  MAX_FILES_PER_TRANSFER
+} = require('../config/constants');
 const { formatSize } = require('../utils/formatSize');
 
-// Memory-তে file রাখি (RAM), পরে storage.service-এ পাঠাব
+// Memory storage (RAM)
 const storage = multer.memoryStorage();
 
 const upload = multer({
   storage,
   limits: {
-    fileSize: MAX_FILE_SIZE,
-    files: 1 // একবারে ১টা file (future-এ multi করব)
+    fileSize: MAX_FILE_SIZE, // per-file limit (100MB)
+    files: MAX_FILES_PER_TRANSFER // max 5 files
   },
   fileFilter: (req, file, cb) => {
-    // সব file allow — কিন্তু খালি file reject
     if (!file.originalname) {
       return cb(new Error('Invalid file'));
     }
@@ -23,35 +25,88 @@ const upload = multer({
   }
 });
 
-// Single file upload middleware
+/**
+ * Single file upload (backward compatible)
+ * Field name: "file"
+ */
 const uploadSingle = upload.single('file');
 
-// Error wrapper (Multer error গুলো সুন্দরভাবে handle করে)
+/**
+ * Multiple files upload (new)
+ * Field name: "files"
+ * Max: MAX_FILES_PER_TRANSFER (5)
+ */
+const uploadMultiple = upload.array('files', MAX_FILES_PER_TRANSFER);
+
+/**
+ * Single file middleware with error handling
+ */
 function uploadMiddleware(req, res, next) {
   uploadSingle(req, res, err => {
-    if (err instanceof multer.MulterError) {
-      if (err.code === 'LIMIT_FILE_SIZE') {
-        return res.status(413).json({
-          success: false,
-          error: `File too large. Maximum size: ${formatSize(MAX_FILE_SIZE)}`,
-          code: 'FILE_TOO_LARGE'
-        });
-      }
-      return res.status(400).json({
-        success: false,
-        error: err.message,
-        code: err.code
-      });
-    }
-    if (err) {
-      return res.status(400).json({
-        success: false,
-        error: err.message,
-        code: 'UPLOAD_ERROR'
-      });
-    }
-    next();
+    handleMulterError(err, res, next);
   });
 }
 
-module.exports = { uploadMiddleware };
+/**
+ * Multiple files middleware with error handling
+ */
+function uploadMultipleMiddleware(req, res, next) {
+  uploadMultiple(req, res, err => {
+    handleMulterError(err, res, next);
+  });
+}
+
+/**
+ * Multer error handler
+ */
+function handleMulterError(err, res, next) {
+  if (err instanceof multer.MulterError) {
+    // File too large
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      return res.status(413).json({
+        success: false,
+        error: `File too large. Maximum size: ${formatSize(MAX_FILE_SIZE)}`,
+        code: 'FILE_TOO_LARGE'
+      });
+    }
+
+    // Too many files
+    if (err.code === 'LIMIT_FILE_COUNT') {
+      return res.status(413).json({
+        success: false,
+        error: `Too many files. Maximum: ${MAX_FILES_PER_TRANSFER}`,
+        code: 'TOO_MANY_FILES'
+      });
+    }
+
+    // Unexpected field
+    if (err.code === 'LIMIT_UNEXPECTED_FILE') {
+      return res.status(400).json({
+        success: false,
+        error: 'Unexpected file field',
+        code: 'UNEXPECTED_FIELD'
+      });
+    }
+
+    return res.status(400).json({
+      success: false,
+      error: err.message,
+      code: err.code
+    });
+  }
+
+  if (err) {
+    return res.status(400).json({
+      success: false,
+      error: err.message,
+      code: 'UPLOAD_ERROR'
+    });
+  }
+
+  next();
+}
+
+module.exports = {
+  uploadMiddleware, // single
+  uploadMultipleMiddleware // multiple (new)
+};

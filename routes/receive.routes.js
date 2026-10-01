@@ -1,5 +1,5 @@
 // routes/receive.routes.js
-// Receive endpoints
+// Receive endpoints — info, download, preview, stats
 
 const express = require('express');
 const router = express.Router();
@@ -14,23 +14,28 @@ const { validateCode } = require('../middlewares/validate.middleware');
 const { receiveLimiter } = require('../middlewares/rateLimit.middleware');
 const { asyncHandler } = require('../middlewares/error.middleware');
 
-// GET /api/stats — Public stats
+/* ── Stats ── */
 router.get('/stats', asyncHandler(getStats));
 
-// GET /api/info/:code — Transfer info
+/* ── Info ── */
 router.get('/info/:code', receiveLimiter, validateCode, asyncHandler(getInfo));
 
-// GET /api/download/:code — Download file
+/* ── Download ──
+   Supports:
+     /api/download/:code           → single file (default)
+     /api/download/:code/default   → single file explicit
+     /api/download/:code/:fileId   → multi-file specific
+*/
 router.get(
-  '/download/:code',
+  '/download/:code/:fileId?',
   receiveLimiter,
   validateCode,
   asyncHandler(downloadFile)
 );
 
-// GET /api/preview/:code — Inline preview
+/* ── Preview ── (same pattern) */
 router.get(
-  '/preview/:code',
+  '/preview/:code/:fileId?',
   receiveLimiter,
   validateCode,
   asyncHandler(previewFile)

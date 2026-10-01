@@ -33,6 +33,8 @@
     QS.backToTop?.init();
 
     // ── Feature components
+    QS.fileList?.init();
+    QS.previewModal?.init();
     QS.send?.init();
     QS.receive?.init();
 

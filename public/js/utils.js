@@ -185,10 +185,12 @@
     },
 
     /**
-     * Validate 6-digit code
+     * Validate 6-character code (letters, numbers, and special chars)
      */
     isValidCode(code) {
-      return /^\d{6}$/.test(String(code || '').trim());
+      if (!code || typeof code !== 'string') return false;
+      // চেক করছি ৬ অক্ষরের Alphanumeric + Special Char কোড কিনা
+      return /^[A-Za-z0-9!@#$%^&*_+\-=?]{6}$/.test(code.trim());
     },
 
     /**

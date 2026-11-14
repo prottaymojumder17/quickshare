@@ -25,9 +25,26 @@
       // Remove everything else, keep the case exactly as typed
       this.els.input?.addEventListener('input', e => {
         e.target.value = e.target.value
-          // শুধু A-Z, a-z, 0-9 এবং আপনার সেট করা স্পেশাল ক্যারেক্টারগুলো রাখবে
           .replace(/[^A-Za-z0-9!@#$%^&*_+\-=?]/g, '')
           .slice(0, cfg.CODE_LENGTH);
+        this.clearError();
+      });
+
+      // ⭐ NEW: Handle Paste Event specifically
+      // This ensures that letters and special chars are pasted correctly
+      this.els.input?.addEventListener('paste', e => {
+        e.preventDefault();
+        const pastedText = (e.clipboardData || window.clipboardData).getData(
+          'text'
+        );
+
+        // Filter the pasted text
+        const cleanText = pastedText
+          .replace(/[^A-Za-z0-9!@#$%^&*_+\-=?]/g, '')
+          .slice(0, cfg.CODE_LENGTH);
+
+        // Insert into input
+        this.els.input.value = cleanText;
         this.clearError();
       });
 

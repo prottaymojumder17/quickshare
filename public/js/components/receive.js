@@ -4,7 +4,7 @@
 (function () {
   'use strict';
   const QS = window.QS;
-  const { $, onlyDigits, isValidCode } = QS.utils;
+  const { $, isValidCode } = QS.utils;
   const cfg = QS.config;
 
   let isFetching = false;
@@ -21,9 +21,13 @@
         result: $('#receiveResult')
       };
 
-      // Only allow digits in input
+      // ⚠️ Allow Alphanumeric + Special Characters
+      // Remove everything else, keep the case exactly as typed
       this.els.input?.addEventListener('input', e => {
-        e.target.value = onlyDigits(e.target.value).slice(0, cfg.CODE_LENGTH);
+        e.target.value = e.target.value
+          // শুধু A-Z, a-z, 0-9 এবং আপনার সেট করা স্পেশাল ক্যারেক্টারগুলো রাখবে
+          .replace(/[^A-Za-z0-9!@#$%^&*_+\-=?]/g, '')
+          .slice(0, cfg.CODE_LENGTH);
         this.clearError();
       });
 
@@ -43,9 +47,9 @@
       if (!this.els.error) return;
       this.els.error.textContent = msg;
       this.els.error.hidden = false;
-      // shake
+      // shake animation
       this.els.error.classList.remove('anim-shake');
-      void this.els.error.offsetWidth;
+      void this.els.error.offsetWidth; // trigger reflow
       this.els.error.classList.add('anim-shake');
     },
 
@@ -75,7 +79,9 @@
       this.clearError();
 
       if (!isValidCode(code)) {
-        this.showError('Please enter a valid 6-digit code');
+        this.showError(
+          'Please enter a valid 6-character code (letters, numbers & symbols)'
+        );
         this.els.input?.focus();
         return;
       }

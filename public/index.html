@@ -9,7 +9,7 @@
     <title>QuickShare — Free Online File Transfer & Share Files Instantly</title>
     <meta name="title" content="QuickShare — Free Online File Transfer & Share Files Instantly">
     <meta name="description"
-        content="QuickShare is a free online file transfer service. Share any file instantly with a 6-digit code. No signup, no limits — audio, video, documents, images up to 100 MB.">
+        content="QuickShare is a free online file transfer service. Share any file instantly with a 6-character code. No signup, no limits — audio, video, documents, images up to 25 MB.">
     <meta name="keywords"
         content="QuickShare, quick share, file share online, file transfer online, send files online free, share files with code, online file transfer, free file sharing, instant file transfer, share large files, file share without signup, transfer file, share file online">
     <meta name="robots" content="index, follow">
@@ -24,7 +24,7 @@
     <meta property="og:site_name" content="QuickShare">
     <meta property="og:title" content="QuickShare — Free Online File Transfer">
     <meta property="og:description"
-        content="Share any file instantly with a 6-digit code. No signup, no limits. Free forever.">
+        content="Share any file instantly with a 6-character code. No signup, no limits. Free forever.">
     <meta property="og:image" content="https://quickshare-bayp.onrender.com/assets/images/og-image.png">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
@@ -32,7 +32,7 @@
     <!-- ═══════════════ TWITTER ═══════════════ -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="QuickShare — Free Online File Transfer">
-    <meta name="twitter:description" content="Share any file instantly with a 6-digit code. No signup, no limits.">
+    <meta name="twitter:description" content="Share any file instantly with a 6-character code. No signup, no limits.">
     <meta name="twitter:image" content="https://quickshare-bayp.onrender.com/assets/images/og-image.png">
 
     <!-- ═══════════════ FAVICON ═══════════════ -->
@@ -82,7 +82,7 @@
       "name": "QuickShare",
       "alternateName": ["Quick Share", "QuickShare File Transfer", "File Share Online"],
       "url": "https://quickshare-bayp.onrender.com",
-      "description": "Free online file transfer service. Share files instantly with a 6-digit code. No signup required.",
+      "description": "Free online file transfer service. Share files instantly with a 6-character code. No signup required.",
       "applicationCategory": "UtilityApplication",
       "operatingSystem": "Web",
       "browserRequirements": "Requires JavaScript",
@@ -93,7 +93,7 @@
       },
       "featureList": [
         "Multi-file upload (up to 5 files)",
-        "6-digit share code",
+        "6-character share code",
         "QR code sharing",
         "Download as ZIP",
         "Text sharing",
@@ -135,7 +135,7 @@
           "name": "What file types are supported?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Any file type — audio, video, documents, images, archives, and more. Up to 100 MB per file, max 5 files per transfer."
+            "text": "Any file type — audio, video, documents, images, archives, and more. Up to 25 MB per file, max 5 files per transfer."
           }
         },
         {
@@ -413,15 +413,16 @@
                     <div class="receive-input-wrap">
                         <label for="codeInput" class="input-label">Enter the secret code</label>
                         <div class="code-input-group">
-                            <input type="text" id="codeInput" class="code-input" placeholder="000000" maxlength="6"
-                                inputmode="numeric" autocomplete="off" spellcheck="false">
+                            <!-- ⚠️ inputmode="text" করা হয়েছে যাতে মোবাইলে অক্ষর ও সংখ্যা দুটোই টাইপ করা যায় -->
+                            <input type="text" id="codeInput" class="code-input" placeholder="aB#9!X" maxlength="6" inputmode="text"
+                                autocomplete="off" spellcheck="false" autocapitalize="none">
                             <button class="btn btn-primary" id="receiveBtn">
                                 <span class="btn-text">Receive</span>
                                 <span class="btn-spinner" hidden></span>
                             </button>
                         </div>
                         <div class="input-hint">
-                            6-digit code · Ask the sender if you don't have one
+                            6-character code (letters & numbers) · Ask the sender if you don't have one
                         </div>
                     </div>
 
@@ -462,7 +463,7 @@
                 <div class="feature-card">
                     <div class="feature-icon">🔒</div>
                     <h3 class="feature-title">Secure Codes</h3>
-                    <p class="feature-text">6-digit unique codes. Only people with the code can access.</p>
+                    <p class="feature-text">6-character alphanumeric codes. Only people with the code can access.</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon">📁</div>
@@ -509,7 +510,7 @@
                     <div class="step-number">2</div>
                     <div class="step-icon">🔑</div>
                     <h3 class="step-title">Get Code</h3>
-                    <p class="step-text">We generate a unique 6-digit code for you.</p>
+                    <p class="step-text">We generate a unique 6-character code for you.</p>
                 </div>
                 <div class="step-connector"></div>
                 <div class="step-card">
@@ -572,8 +573,8 @@
                         <span class="faq-icon">+</span>
                     </button>
                     <div class="faq-answer">
-<p>Any file type — audio, video, documents, images, archives, and more. Up to 25 MB per file, max 5 files per transfer.
-</p>
+                        <p>Any file type — audio, video, documents, images, archives, and more. Up to 25 MB per file,
+                            max 5 files per transfer.</p>
                     </div>
                 </div>
 
